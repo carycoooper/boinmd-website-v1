@@ -125,6 +125,33 @@ foreach ( $cat_order as $slug ) {
   <?php endif; ?>
 
   <?php if ( ! empty( $faqs ) ) : bkh_render_faq_block( $faqs ); endif; ?>
+  <?php
+  // Topic pages are rendered through taxonomy route; output FAQ JSON-LD here
+  // to ensure visible FAQ content can still be recognized by crawlers.
+  if ( ! empty( $faqs ) ) :
+      $faq_entities = array();
+      foreach ( $faqs as $f ) {
+          if ( empty( $f['question'] ) || empty( $f['answer'] ) ) continue;
+          $faq_entities[] = array(
+              '@type' => 'Question',
+              'name'  => wp_strip_all_tags( $f['question'] ),
+              'acceptedAnswer' => array(
+                  '@type' => 'Answer',
+                  'text'  => wp_strip_all_tags( $f['answer'] ),
+              ),
+          );
+      }
+      if ( ! empty( $faq_entities ) ) :
+  ?>
+    <script type="application/ld+json"><?php echo wp_json_encode( array(
+      '@context' => 'https://schema.org',
+      '@type' => 'FAQPage',
+      'mainEntity' => $faq_entities,
+    ), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ); ?></script>
+  <?php
+      endif;
+  endif;
+  ?>
 
   <?php bkh_render_video_block( $post_id ); ?>
 

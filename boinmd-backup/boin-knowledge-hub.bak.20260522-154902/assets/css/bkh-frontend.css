@@ -186,6 +186,8 @@
   .bkh-cta-inner{flex-direction:column;align-items:flex-start}
   .bkh-video-meta{flex-direction:column;align-items:flex-start;gap:4px}
   .bkh-video-account{margin-left:0}
+  .bkh-tab-nav{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;white-space:nowrap;-webkit-overflow-scrolling:touch;padding-bottom:6px}
+  .bkh-tab{flex:0 0 auto}
 }
 
 /* Landing page upgrade */
