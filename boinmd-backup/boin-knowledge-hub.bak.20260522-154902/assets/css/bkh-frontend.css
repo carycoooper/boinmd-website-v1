@@ -207,3 +207,23 @@
 .bkh-art-meta{font-size:12px;color:var(--bkh-ink3)}
 .bkh-art-cta{margin-top:8px;display:inline-block;color:var(--bkh-purple);text-decoration:none;font-size:13px;font-weight:500}
 .bkh-art-cta:hover{text-decoration:underline}
+
+/* Tinnitus topic enhancements */
+.bkh-hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.bkh-scene-grid-2col{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.bkh-compare-card{background:#fff;border:1px solid var(--bkh-b2);border-radius:var(--bkh-r);padding:20px 22px;margin:18px 0 10px}
+.bkh-compare-card p{margin:0 0 8px;color:var(--bkh-ink2);font-size:14.5px}
+.bkh-compare-card p:last-child{margin-bottom:0}
+.bkh-tip-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.bkh-tip-card{background:#fff;border:1px solid var(--bkh-b2);border-radius:var(--bkh-rs);padding:14px 16px;font-size:14px;color:var(--bkh-ink2)}
+.bkh-disclaimer{font-size:12.5px;color:var(--bkh-ink3);margin-top:12px}
+.bkh-cta-soft{background:linear-gradient(180deg,var(--bkh-pp) 0%,var(--bkh-bg2) 100%);color:var(--bkh-ink);border-top:1px solid var(--bkh-b1)}
+.bkh-cta-soft .bkh-cta-title{color:var(--bkh-ink)}
+.bkh-cta-soft .bkh-cta-desc{color:var(--bkh-ink2)}
+.bkh-cta-soft .bkh-btn-ghost{color:var(--bkh-purple);border-color:var(--bkh-b3);background:#fff}
+.bkh-cta-soft .bkh-btn-ghost:hover{border-color:var(--bkh-purple)}
+
+@media(max-width:680px){
+  .bkh-hero-actions .bkh-btn{width:100%;text-align:center}
+  .bkh-tip-grid{grid-template-columns:1fr}
+}
