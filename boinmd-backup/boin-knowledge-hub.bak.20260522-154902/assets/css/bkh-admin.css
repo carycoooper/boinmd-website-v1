@@ -1,0 +1,13 @@
+/* Boin Knowledge Hub — admin meta box styling */
+.bkh-repeater{margin:8px 0}
+.bkh-rep-item{background:#f6f7f9;border:1px solid #d8dadd;border-radius:6px;padding:14px 16px 8px;margin-bottom:10px;position:relative}
+.bkh-rep-item label{display:block;font-weight:500;font-size:12px;margin-bottom:4px;color:#555}
+.bkh-rep-item p{margin:6px 0}
+.bkh-rep-item input[type=text],.bkh-rep-item input[type=url],.bkh-rep-item input[type=number],.bkh-rep-item input[type=date],.bkh-rep-item select,.bkh-rep-item textarea{width:100%}
+.bkh-row{display:flex;flex-wrap:wrap;gap:12px}
+.bkh-row > span{flex:1 1 180px;display:block}
+.bkh-row > span > label{display:block}
+.bkh-row > span > input{width:100%}
+.bkh-remove{background:#fff;color:#a00;border:1px solid #f0c0c0;margin-top:6px}
+.bkh-remove:hover{background:#fdf0f0}
+.bkh-add{margin-top:4px}

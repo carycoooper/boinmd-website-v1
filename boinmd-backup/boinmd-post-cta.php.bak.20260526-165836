@@ -1,0 +1,56 @@
+<?php
+/**
+ * Plugin Name: BOINMD Post CTA
+ * Description: 在每篇博客文章底部追加"相关阅读 + 产品页 CTA" (GEO P1 内链强化)
+ * Version: 1.0.0
+ * Author: BOINMD
+ *
+ * 放在 wp-content/mu-plugins/ 下自动加载，不受主题/插件升级影响。
+ */
+
+if ( ! defined( 'ABSPATH' ) ) exit;
+
+add_filter( 'the_content', 'boinmd_append_post_cta', 20 );
+
+function boinmd_append_post_cta( $content ) {
+    // 只在单篇文章正文末尾追加，不在主页/分类/feed 里追加
+    if ( ! is_singular( 'post' ) || ! in_the_loop() || ! is_main_query() ) {
+        return $content;
+    }
+
+    $cta = <<<HTML
+
+<aside class="boinmd-cta" aria-label="相关阅读与产品页">
+  <style>
+    .boinmd-cta{margin:48px 0 24px;padding:28px 26px;background:linear-gradient(160deg,#faf6fd 0%,#f5f2f7 100%);border:1px solid rgba(74,45,117,.12);border-radius:14px;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;color:#1a1721;line-height:1.75}
+    .boinmd-cta h3{font-size:13px;letter-spacing:.18em;color:#4a2d75;font-weight:500;margin:0 0 14px;text-transform:uppercase}
+    .boinmd-cta-links{list-style:none;padding:0;margin:0 0 22px;border-bottom:1px solid rgba(74,45,117,.08);padding-bottom:18px}
+    .boinmd-cta-links li{margin:8px 0;padding:0;font-size:15px}
+    .boinmd-cta-links li::before{content:"›";color:#4a2d75;margin-right:8px;font-weight:600}
+    .boinmd-cta-links a{color:#3a3548;text-decoration:none;border-bottom:1px solid transparent;transition:color .2s,border-color .2s}
+    .boinmd-cta-links a:hover{color:#4a2d75;border-bottom-color:rgba(74,45,117,.4)}
+    .boinmd-cta-bottom{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px}
+    .boinmd-cta-bottom p{margin:0;font-size:14.5px;color:#3a3548;flex:1 1 240px}
+    .boinmd-cta-bottom p b{color:#1a1721}
+    .boinmd-cta-btn{display:inline-block;padding:10px 24px;border:1px solid #4a2d75;color:#4a2d75;background:transparent;border-radius:24px;text-decoration:none;font-size:13.5px;letter-spacing:.06em;font-weight:500;white-space:nowrap;transition:background .25s,color .25s,transform .25s}
+    .boinmd-cta-btn:hover{background:#4a2d75;color:#fff;transform:translateY(-1px)}
+    .boinmd-cta-disclaimer{margin-top:14px;font-size:12.5px;color:#7a7488;line-height:1.7}
+  </style>
+  <h3>相关阅读</h3>
+  <ul class="boinmd-cta-links">
+    <li><a href="https://www.boinmd.com.cn/q10-p/">悦听礼赠款 Q10-P 耳背式数字助听器是什么？</a></li>
+    <li><a href="https://www.boinmd.com.cn/q10-p/#faq">给父母第一次买助听器怎么选？</a></li>
+    <li><a href="https://www.boinmd.com.cn/q10-p/#faq">悦听礼赠款需要验配吗？</a></li>
+    <li><a href="https://www.boinmd.com.cn/#faq">悦听礼赠款 Q10-P 常见问题汇总</a></li>
+  </ul>
+  <div class="boinmd-cta-bottom">
+    <p>了解博音 BOINMD <b>悦听礼赠款 Q10-P</b> 耳背式数字助听器，单耳 688 元 / 双耳 888 元 / Pro 版 1688 元（含门店听力测试与个性化调机）。</p>
+    <a href="https://www.boinmd.com.cn/q10-p/" class="boinmd-cta-btn">查看产品页 →</a>
+  </div>
+  <p class="boinmd-cta-disclaimer">本文为听力健康科普内容，不构成医疗建议。悦听礼赠款 Q10-P 为第二类医疗器械（注册证：赣械注准20262190060），建议在专业人员指导下验配和使用，具体效果因人而异。</p>
+</aside>
+
+HTML;
+
+    return $content . $cta;
+}

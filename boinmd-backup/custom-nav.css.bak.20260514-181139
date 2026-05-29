@@ -1,0 +1,62 @@
+/* 博客导航栏样式 - 与官网保持一致 */
+.blog-header {
+    background: #7a00df !important;
+    padding: 15px 0 !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: relative;
+    z-index: 1000;
+}
+.blog-header * {
+    color: #ffffff !important;
+    text-decoration: none !important;
+}
+.blog-header .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+.blog-header .logo {
+    font-size: 20px;
+    font-weight: bold;
+    color: #ffffff !important;
+}
+.blog-header nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+.blog-header nav ul li {
+    margin-left: 30px;
+}
+.blog-header nav ul li a {
+    font-size: 14px;
+    color: #ffffff !important;
+}
+.blog-header .phone {
+    font-size: 14px;
+    color: #ffffff !important;
+    margin-right: 20px;
+}
+.blog-header .btn {
+    background: #000000 !important;
+    color: #ffffff !important;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+}
+/* 隐藏WordPress默认导航 */
+.site-header,
+#site-header,
+.header-footer-group {
+    display: none !important;
+}
+/* 覆盖主题样式 */
+:root {
+    --wp--preset--color--primary: #7a00df !important;
+    --wp--preset--color--white: #ffffff !important;
+}
