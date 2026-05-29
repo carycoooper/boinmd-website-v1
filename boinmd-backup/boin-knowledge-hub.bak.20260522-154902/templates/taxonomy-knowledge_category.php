@@ -24,6 +24,28 @@ if ( $topic_q->have_posts() ) {
 
 get_header();
 wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array(), BKH_VERSION );
+
+$cat_order = array( 'tinnitus', 'hearing-loss', 'hearing-aids', 'ai-hearing', 'care', 'fitting', 'stories' );
+$cat_labels = array(
+    'tinnitus'     => '耳鸣专题',
+    'hearing-loss' => '听力下降',
+    'hearing-aids' => '助听器百科',
+    'ai-hearing'   => 'AI智能助听',
+    'care'         => '使用与保养',
+    'fitting'      => '验配指南',
+    'stories'      => '用户案例',
+);
+$cats_raw = get_terms( array( 'taxonomy' => 'knowledge_category', 'hide_empty' => false ) );
+$cats_map = array();
+if ( ! is_wp_error( $cats_raw ) ) {
+    foreach ( $cats_raw as $c ) {
+        $cats_map[ $c->slug ] = $c;
+    }
+}
+$cats = array();
+foreach ( $cat_order as $slug ) {
+    if ( isset( $cats_map[ $slug ] ) ) $cats[] = $cats_map[ $slug ];
+}
 ?>
 
 <main class="bkh-page bkh-tax">
@@ -40,6 +62,21 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
       <?php endif; ?>
     </div>
   </section>
+
+  <?php if ( ! empty( $cats ) ) : ?>
+  <section class="bkh-tabs">
+    <div class="bkh-wrap">
+      <nav class="bkh-tab-nav" aria-label="知识分类">
+        <a class="bkh-tab" href="<?php echo esc_url( bkh_url( '/knowledge/' ) ); ?>">全部</a>
+        <?php foreach ( $cats as $c ) : ?>
+          <a class="bkh-tab <?php echo $c->slug === $term->slug ? 'is-active' : ''; ?>" href="<?php echo esc_url( bkh_category_url( $c->slug ) ); ?>">
+            <?php echo esc_html( $cat_labels[ $c->slug ] ?? $c->name ); ?>
+          </a>
+        <?php endforeach; ?>
+      </nav>
+    </div>
+  </section>
+  <?php endif; ?>
 
   <section class="bkh-recommended">
     <div class="bkh-wrap">

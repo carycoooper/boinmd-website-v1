@@ -33,6 +33,8 @@ class BKH_Schema {
         }
         if ( is_tax( 'knowledge_category' ) || (int) get_query_var( 'bkh_landing' ) === 1 || is_post_type_archive( 'knowledge_article' ) ) {
             echo $this->landing_breadcrumb_jsonld();
+            echo $this->collection_page_jsonld();
+            echo $this->item_list_jsonld();
         }
     }
 
@@ -184,6 +186,79 @@ class BKH_Schema {
         $out .= "<meta property=\"og:site_name\" content=\"博音 BOINMD 听力知识中心\">\n";
         $out .= "<meta property=\"og:locale\" content=\"zh_CN\">\n";
         return $out;
+    }
+
+    public function collection_page_jsonld() {
+        $name = '听力知识中心';
+        $url  = bkh_url( '/knowledge/' );
+        $description = '关于耳鸣、听力下降、助听器与 AI 智能助听的知识内容。';
+
+        if ( is_tax( 'knowledge_category' ) ) {
+            $term = get_queried_object();
+            if ( $term && ! is_wp_error( $term ) ) {
+                $name = $term->name . ' - 听力知识中心';
+                $url  = bkh_category_url( $term->slug );
+                if ( ! empty( $term->description ) ) $description = $term->description;
+            }
+        }
+
+        return $this->wrap( array(
+            '@context'    => 'https://schema.org',
+            '@type'       => 'CollectionPage',
+            'name'        => $name,
+            'description' => $description,
+            'url'         => $url,
+            'inLanguage'  => 'zh-CN',
+            'isPartOf'    => array(
+                '@type' => 'WebSite',
+                'name'  => get_bloginfo( 'name' ),
+                'url'   => home_url( '/' ),
+            ),
+        ) );
+    }
+
+    public function item_list_jsonld() {
+        $query_args = array(
+            'post_type'      => 'knowledge_article',
+            'posts_per_page' => 12,
+            'post_status'    => 'publish',
+            'orderby'        => array( 'date' => 'DESC' ),
+        );
+
+        if ( is_tax( 'knowledge_category' ) ) {
+            $term = get_queried_object();
+            if ( $term && ! is_wp_error( $term ) ) {
+                $query_args['tax_query'] = array(
+                    array(
+                        'taxonomy' => 'knowledge_category',
+                        'field'    => 'slug',
+                        'terms'    => $term->slug,
+                    ),
+                );
+            }
+        }
+
+        $q = new WP_Query( $query_args );
+        if ( ! $q->have_posts() ) return '';
+
+        $items = array();
+        $pos = 1;
+        while ( $q->have_posts() ) {
+            $q->the_post();
+            $items[] = array(
+                '@type'    => 'ListItem',
+                'position' => $pos++,
+                'name'     => get_the_title(),
+                'url'      => get_permalink(),
+            );
+        }
+        wp_reset_postdata();
+
+        return $this->wrap( array(
+            '@context'        => 'https://schema.org',
+            '@type'           => 'ItemList',
+            'itemListElement' => $items,
+        ) );
     }
 
     private function wrap( $data ) {

@@ -1,6 +1,6 @@
 <?php
 /**
- * single-knowledge_topic.php — 知识专题详情
+ * single-knowledge_topic.php - 知识专题详情
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
 
@@ -20,14 +20,35 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
 if ( ! have_posts() ) { get_footer(); return; }
 the_post();
 $post_id = get_the_ID();
-$sub     = get_post_meta( $post_id, '_bkh_hero_subtitle', true );
+$sub      = get_post_meta( $post_id, '_bkh_hero_subtitle', true );
 $hero_img = get_post_meta( $post_id, '_bkh_hero_image', true ) ?: get_the_post_thumbnail_url( null, 'full' );
 $scenes   = bkh_get_scenes( $post_id );
 $reasons  = bkh_get_reasons( $post_id );
 $faqs     = bkh_get_faqs( $post_id );
 $terms    = wp_get_object_terms( $post_id, 'knowledge_category' );
 $cat_slug = ( ! is_wp_error( $terms ) && ! empty( $terms ) ) ? $terms[0]->slug : '';
-$cat_name = ( ! is_wp_error( $terms ) && ! empty( $terms ) ) ? $terms[0]->name : '专题';
+
+$cat_order = array( 'tinnitus', 'hearing-loss', 'hearing-aids', 'ai-hearing', 'care', 'fitting', 'stories' );
+$cat_labels = array(
+    'tinnitus'     => '耳鸣专题',
+    'hearing-loss' => '听力下降',
+    'hearing-aids' => '助听器百科',
+    'ai-hearing'   => 'AI智能助听',
+    'care'         => '使用与保养',
+    'fitting'      => '验配指南',
+    'stories'      => '用户案例',
+);
+$cats_raw = get_terms( array( 'taxonomy' => 'knowledge_category', 'hide_empty' => false ) );
+$cats_map = array();
+if ( ! is_wp_error( $cats_raw ) ) {
+    foreach ( $cats_raw as $c ) {
+        $cats_map[ $c->slug ] = $c;
+    }
+}
+$cats = array();
+foreach ( $cat_order as $slug ) {
+    if ( isset( $cats_map[ $slug ] ) ) $cats[] = $cats_map[ $slug ];
+}
 ?>
 
 <main class="bkh-page bkh-topic">
@@ -35,8 +56,8 @@ $cat_name = ( ! is_wp_error( $terms ) && ! empty( $terms ) ) ? $terms[0]->name :
   <section class="bkh-hero bkh-hero-topic" <?php if ( $hero_img ) printf( 'style="background-image:linear-gradient(180deg,rgba(255,255,255,.85) 0%%,rgba(255,255,255,.95) 100%%),url(%s);background-size:cover;background-position:center"', esc_url( $hero_img ) ); ?>>
     <div class="bkh-wrap">
       <nav class="bkh-crumbs">
-        <a href="<?php echo esc_url( bkh_url( '/' ) ); ?>">首页</a> ›
-        <a href="<?php echo esc_url( bkh_url( '/knowledge/' ) ); ?>">知识中心</a> ›
+        <a href="<?php echo esc_url( bkh_url( '/' ) ); ?>">首页</a> ·
+        <a href="<?php echo esc_url( bkh_url( '/knowledge/' ) ); ?>">知识中心</a> ·
         <span><?php the_title(); ?></span>
       </nav>
       <h1 class="bkh-hero-title"><?php the_title(); ?></h1>
@@ -44,6 +65,21 @@ $cat_name = ( ! is_wp_error( $terms ) && ! empty( $terms ) ) ? $terms[0]->name :
       <?php if ( has_excerpt() ) : ?><p class="bkh-hero-summary"><?php echo esc_html( get_the_excerpt() ); ?></p><?php endif; ?>
     </div>
   </section>
+
+  <?php if ( ! empty( $cats ) ) : ?>
+  <section class="bkh-tabs">
+    <div class="bkh-wrap">
+      <nav class="bkh-tab-nav" aria-label="知识分类">
+        <a class="bkh-tab" href="<?php echo esc_url( bkh_url( '/knowledge/' ) ); ?>">全部</a>
+        <?php foreach ( $cats as $c ) : ?>
+          <a class="bkh-tab <?php echo $c->slug === $cat_slug ? 'is-active' : ''; ?>" href="<?php echo esc_url( bkh_category_url( $c->slug ) ); ?>">
+            <?php echo esc_html( $cat_labels[ $c->slug ] ?? $c->name ); ?>
+          </a>
+        <?php endforeach; ?>
+      </nav>
+    </div>
+  </section>
+  <?php endif; ?>
 
   <?php if ( ! empty( $scenes ) ) : ?>
   <section class="bkh-block bkh-scenes">
@@ -93,7 +129,6 @@ $cat_name = ( ! is_wp_error( $terms ) && ! empty( $terms ) ) ? $terms[0]->name :
   <?php bkh_render_video_block( $post_id ); ?>
 
   <?php
-  // Related articles in same category
   if ( $cat_slug ) {
       $related = new WP_Query( array(
           'post_type'      => 'knowledge_article',
@@ -105,7 +140,7 @@ $cat_name = ( ! is_wp_error( $terms ) && ! empty( $terms ) ) ? $terms[0]->name :
       if ( $related->have_posts() ) : ?>
         <section class="bkh-block bkh-related">
           <div class="bkh-wrap">
-            <h2 class="bkh-section-title">本专题相关内容</h2>
+            <h2 class="bkh-section-title">本专题相关文章</h2>
             <div class="bkh-article-grid">
               <?php while ( $related->have_posts() ) : $related->the_post();
                 $thumb = get_the_post_thumbnail_url( null, 'medium' );
