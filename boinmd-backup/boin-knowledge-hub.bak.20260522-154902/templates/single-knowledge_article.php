@@ -32,6 +32,7 @@ if ( $summary === '' && has_excerpt() ) $summary = trim( (string) get_the_excerp
 // Build a lightweight server-side TOC by scanning H2/H3 and injecting IDs.
 $content_html = apply_filters( 'the_content', get_post_field( 'post_content', $post_id ) );
 $toc_items = array();
+$used_ids = array();
 if ( preg_match_all( '/<h([23])([^>]*)>(.*?)<\/h\1>/is', $content_html, $matches, PREG_OFFSET_CAPTURE ) ) {
     $new_html = '';
     $cursor = 0;
@@ -50,6 +51,13 @@ if ( preg_match_all( '/<h([23])([^>]*)>(.*?)<\/h\1>/is', $content_html, $matches
             $id = sanitize_title( $idm[2] );
         }
         if ( $id === '' ) $id = 'sec-' . $idx++;
+        $base_id = $id;
+        $suffix = 2;
+        while ( isset( $used_ids[ $id ] ) ) {
+            $id = $base_id . '-' . $suffix;
+            $suffix++;
+        }
+        $used_ids[ $id ] = true;
 
         if ( $text !== '' ) {
             $toc_items[] = array(
@@ -61,6 +69,8 @@ if ( preg_match_all( '/<h([23])([^>]*)>(.*?)<\/h\1>/is', $content_html, $matches
 
         if ( stripos( $attrs, ' id=' ) === false ) {
             $attrs .= ' id="' . esc_attr( $id ) . '"';
+        } else {
+            $attrs = preg_replace( '/\sid=(["\'])(.*?)\1/i', ' id="' . esc_attr( $id ) . '"', $attrs, 1 );
         }
         $replacement = '<h' . $level . $attrs . '>' . $inner . '</h' . $level . '>';
         $new_html .= substr( $content_html, $cursor, $start - $cursor ) . $replacement;

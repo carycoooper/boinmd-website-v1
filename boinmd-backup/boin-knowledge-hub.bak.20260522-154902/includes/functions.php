@@ -265,11 +265,9 @@ function bkh_get_visible_faqs( $post_id ) {
  * Output one JSON-LD block at most once per @type on current request.
  */
 function bkh_output_json_ld_once( $data ) {
-    static $printed_types = array();
+    static $printed_signatures = array();
 
     if ( ! is_array( $data ) || empty( $data['@type'] ) ) return;
-    $type = (string) $data['@type'];
-    if ( isset( $printed_types[ $type ] ) ) return;
 
     $clean = array_filter(
         $data,
@@ -281,9 +279,12 @@ function bkh_output_json_ld_once( $data ) {
         }
     );
 
+    $signature = md5( wp_json_encode( $clean, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
+    if ( isset( $printed_signatures[ $signature ] ) ) return;
+
     echo sprintf(
         "<script type=\"application/ld+json\">%s</script>\n",
         wp_json_encode( $clean, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES )
     );
-    $printed_types[ $type ] = true;
+    $printed_signatures[ $signature ] = true;
 }
