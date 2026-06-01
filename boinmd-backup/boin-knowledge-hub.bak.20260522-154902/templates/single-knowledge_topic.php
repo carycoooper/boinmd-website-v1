@@ -148,7 +148,25 @@ if ( $is_ai_hearing ) $schema_faq = $ai_questions;
     <section class="bkh-block"><div class="bkh-wrap bkh-wrap-text"><h2 class="bkh-section-title">AI 功能只是选择助听器的一部分</h2><p class="bkh-hero-sub">选择助听器时，AI 能力可以提升部分场景体验，但并非唯一标准。听力情况、佩戴舒适度、操作难度、预算和售后服务同样重要。</p><p><a class="bkh-btn bkh-btn-primary" href="<?php echo esc_url( bkh_url('/knowledge/hearing-aids/') ); ?>">查看助听器百科</a></p></div></section>
   <?php endif; ?>
 
-  <?php if ( ! empty( $schema_faq ) ) : $faq_entities = array(); foreach ( $schema_faq as $f ) $faq_entities[] = array('@type'=>'Question','name'=>wp_strip_all_tags($f['q']),'acceptedAnswer'=>array('@type'=>'Answer','text'=>wp_strip_all_tags($f['a']))); ?><script type="application/ld+json"><?php echo wp_json_encode(array('@context'=>'https://schema.org','@type'=>'FAQPage','mainEntity'=>$faq_entities), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?></script><?php endif; ?>
+  <?php
+  if ( ! empty( $schema_faq ) ) :
+    $faq_entities = array();
+    foreach ( $schema_faq as $f ) {
+      $faq_entities[] = array(
+        '@type'          => 'Question',
+        'name'           => wp_strip_all_tags( $f['q'] ),
+        'acceptedAnswer' => array( '@type' => 'Answer', 'text' => wp_strip_all_tags( $f['a'] ) ),
+      );
+    }
+    bkh_output_json_ld_once(
+      array(
+        '@context'   => 'https://schema.org',
+        '@type'      => 'FAQPage',
+        'mainEntity' => $faq_entities,
+      )
+    );
+  endif;
+  ?>
 
   <?php bkh_render_video_block( $post_id ); ?>
 

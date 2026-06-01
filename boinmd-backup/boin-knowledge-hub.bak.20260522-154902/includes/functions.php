@@ -223,3 +223,67 @@ function bkh_get_product_page_url() {
     }
     return bkh_url( '/q10-p/' );
 }
+
+/**
+ * Get visible FAQs for an article/topic with backward-compatible field support.
+ */
+function bkh_get_visible_faqs( $post_id ) {
+    $faqs = array();
+
+    $meta_faqs = bkh_get_faqs( $post_id );
+    if ( is_array( $meta_faqs ) && ! empty( $meta_faqs ) ) {
+        $faqs = $meta_faqs;
+    }
+
+    if ( empty( $faqs ) ) {
+        $acf_faqs = get_post_meta( $post_id, 'faq_items', true );
+        if ( is_array( $acf_faqs ) && ! empty( $acf_faqs ) ) {
+            $faqs = $acf_faqs;
+        }
+    }
+
+    if ( empty( $faqs ) ) {
+        $acf_faqs = get_post_meta( $post_id, 'faq', true );
+        if ( is_array( $acf_faqs ) && ! empty( $acf_faqs ) ) {
+            $faqs = $acf_faqs;
+        }
+    }
+
+    $normalized = array();
+    foreach ( (array) $faqs as $row ) {
+        if ( ! is_array( $row ) ) continue;
+        $q = trim( (string) ( $row['question'] ?? $row['q'] ?? '' ) );
+        $a = trim( (string) ( $row['answer'] ?? $row['a'] ?? '' ) );
+        if ( $q === '' || $a === '' ) continue;
+        $normalized[] = array( 'question' => $q, 'answer' => $a );
+    }
+
+    return $normalized;
+}
+
+/**
+ * Output one JSON-LD block at most once per @type on current request.
+ */
+function bkh_output_json_ld_once( $data ) {
+    static $printed_types = array();
+
+    if ( ! is_array( $data ) || empty( $data['@type'] ) ) return;
+    $type = (string) $data['@type'];
+    if ( isset( $printed_types[ $type ] ) ) return;
+
+    $clean = array_filter(
+        $data,
+        function( $v ) {
+            if ( $v === null ) return false;
+            if ( $v === '' ) return false;
+            if ( is_array( $v ) && empty( $v ) ) return false;
+            return true;
+        }
+    );
+
+    echo sprintf(
+        "<script type=\"application/ld+json\">%s</script>\n",
+        wp_json_encode( $clean, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES )
+    );
+    $printed_types[ $type ] = true;
+}

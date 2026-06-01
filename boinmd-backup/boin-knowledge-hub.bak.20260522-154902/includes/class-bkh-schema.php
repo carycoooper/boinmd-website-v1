@@ -20,7 +20,7 @@ class BKH_Schema {
             if ( get_post_type( $post ) === 'knowledge_article' ) {
                 echo $this->article_jsonld( $post );
             }
-            $faqs = bkh_get_faqs( $post->ID );
+            $faqs = bkh_get_visible_faqs( $post->ID );
             if ( ! empty( $faqs ) ) {
                 echo $this->faq_jsonld( $faqs );
             }
@@ -262,9 +262,8 @@ class BKH_Schema {
     }
 
     private function wrap( $data ) {
-        return sprintf(
-            "<script type=\"application/ld+json\">%s</script>\n",
-            wp_json_encode( $data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES )
-        );
+        ob_start();
+        bkh_output_json_ld_once( $data );
+        return ob_get_clean();
     }
 }
