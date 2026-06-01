@@ -185,8 +185,7 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
           $terms = wp_get_object_terms( get_the_ID(), 'knowledge_category' );
           $cat_label = ( ! is_wp_error( $terms ) && ! empty( $terms ) ) ? $terms[0]->name : '';
           $thumb = get_the_post_thumbnail_url( null, 'medium' );
-          $word_count = str_word_count( wp_strip_all_tags( get_post_field( 'post_content', get_the_ID() ) ) );
-          $read_minutes = max( 1, (int) ceil( $word_count / 260 ) );
+          $read_minutes = bkh_get_reading_minutes( get_the_ID(), 450 );
         ?>
           <article class="bkh-art-card">
             <?php if ( $thumb ) : ?><a href="<?php the_permalink(); ?>" class="bkh-art-thumb-wrap"><img src="<?php echo esc_url( $thumb ); ?>" alt="<?php echo esc_attr( get_the_title() ); ?>" loading="lazy"></a><?php endif; ?>

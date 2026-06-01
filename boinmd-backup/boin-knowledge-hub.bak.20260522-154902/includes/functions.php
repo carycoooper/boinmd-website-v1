@@ -180,3 +180,17 @@ function bkh_url( $path = '/' ) {
     if ( $base === '' ) $base = untrailingslashit( site_url() );
     return $base . '/' . ltrim( $path, '/' );
 }
+
+/**
+ * Estimate reading minutes for Chinese-heavy articles.
+ * Uses character length after stripping tags/whitespace.
+ */
+function bkh_get_reading_minutes( $post_id, $chars_per_minute = 450 ) {
+    $content = get_post_field( 'post_content', $post_id );
+    $text = wp_strip_all_tags( (string) $content );
+    $text = preg_replace( '/\s+/u', '', $text );
+    $length = mb_strlen( $text, 'UTF-8' );
+    if ( $length <= 0 ) return 1;
+    $cpm = max( 100, (int) $chars_per_minute );
+    return max( 1, (int) ceil( $length / $cpm ) );
+}
