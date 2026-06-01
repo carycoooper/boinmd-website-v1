@@ -111,7 +111,7 @@ $ai_questions = array(
   array('q'=>'选助听器一定要选AI吗？','a'=>'不一定。更重要的是听力情况、佩戴舒适度、操作难度和售后服务是否匹配。','slug'=>'must-choose-ai'),
 );
 
-$products_url = bkh_url( '/products/' );
+$products_url = bkh_get_product_page_url();
 $schema_faq = array();
 if ( $is_tinnitus ) $schema_faq = $tinnitus_questions;
 if ( $is_hearing_loss ) $schema_faq = $hearing_questions;

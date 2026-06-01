@@ -209,3 +209,17 @@ function bkh_get_knowledge_article_url_or_fallback( $slug, $fallback = '/knowled
     if ( strpos( $fallback, 'http' ) === 0 ) return $fallback;
     return bkh_url( $fallback );
 }
+
+/**
+ * Resolve product page URL used by knowledge hub CTAs.
+ * Priority: plugin CTA button URL -> hard fallback.
+ */
+function bkh_get_product_page_url() {
+    $cta = get_option( BKH_OPT_CTA, array() );
+    $url = isset( $cta['cta_button_url'] ) ? trim( (string) $cta['cta_button_url'] ) : '';
+    if ( $url !== '' ) {
+        if ( strpos( $url, 'http' ) === 0 ) return $url;
+        return bkh_url( $url );
+    }
+    return bkh_url( '/q10-p/' );
+}
