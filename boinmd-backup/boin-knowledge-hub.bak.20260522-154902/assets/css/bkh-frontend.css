@@ -50,6 +50,7 @@
 .bkh-hot-card{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-radius:var(--bkh-rs);background:#fff;border:1px solid var(--bkh-b2);text-decoration:none;color:var(--bkh-ink);transition:all .25s cubic-bezier(.16,1,.3,1);box-shadow:0 1px 2px rgba(26,23,33,.02)}
 .bkh-hot-card:hover{border-color:var(--bkh-purple);transform:translateY(-2px);box-shadow:0 8px 24px -8px rgba(74,45,117,.16);color:var(--bkh-purple)}
 .bkh-hot-q{font-size:15px;font-weight:500;line-height:1.6;flex:1;padding-right:12px}
+.bkh-hot-a{display:block;font-size:13px;color:var(--bkh-ink3);line-height:1.7;margin-top:6px;padding-right:12px}
 .bkh-hot-arrow{font-size:17px;color:var(--bkh-purple);flex-shrink:0;transition:transform .2s}
 .bkh-hot-card:hover .bkh-hot-arrow{transform:translateX(3px)}
 

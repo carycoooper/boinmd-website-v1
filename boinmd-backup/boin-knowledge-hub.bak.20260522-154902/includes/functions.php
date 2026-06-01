@@ -194,3 +194,18 @@ function bkh_get_reading_minutes( $post_id, $chars_per_minute = 450 ) {
     $cpm = max( 100, (int) $chars_per_minute );
     return max( 1, (int) ceil( $length / $cpm ) );
 }
+
+/**
+ * Return knowledge article permalink if slug exists, otherwise fallback URL.
+ */
+function bkh_get_knowledge_article_url_or_fallback( $slug, $fallback = '/knowledge/tinnitus/' ) {
+    $slug = sanitize_title( (string) $slug );
+    if ( $slug !== '' ) {
+        $post = get_page_by_path( $slug, OBJECT, 'knowledge_article' );
+        if ( $post instanceof WP_Post ) {
+            return get_permalink( $post );
+        }
+    }
+    if ( strpos( $fallback, 'http' ) === 0 ) return $fallback;
+    return bkh_url( $fallback );
+}
