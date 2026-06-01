@@ -9,11 +9,11 @@ get_header();
 $settings = get_option( BKH_OPT_SETTINGS, bkh_default_settings() );
 $hero_title    = $settings['hero_title'] ?? '听力知识中心';
 $hero_subtitle = $settings['hero_subtitle'] ?? '';
-$hero_ph       = $settings['hero_placeholder'] ?? '';
+$hero_ph       = $settings['hero_placeholder'] ?? '例如：晚上耳鸣特别明显怎么办？';
 $hot           = $settings['hot_questions'] ?? array();
 
-$cat_order = array( 'tinnitus', 'hearing-loss', 'hearing-aids', 'ai-hearing', 'care', 'fitting', 'stories' );
-$cat_labels = array(
+$tab_order = array( 'tinnitus', 'hearing-loss', 'hearing-aids', 'ai-hearing', 'care', 'fitting', 'stories' );
+$tab_labels = array(
     'tinnitus'     => '耳鸣专题',
     'hearing-loss' => '听力下降',
     'hearing-aids' => '助听器百科',
@@ -23,19 +23,53 @@ $cat_labels = array(
     'stories'      => '用户案例',
 );
 
-$cats_raw = get_terms( array( 'taxonomy' => 'knowledge_category', 'hide_empty' => false ) );
-$cats_map = array();
-if ( ! is_wp_error( $cats_raw ) ) {
-    foreach ( $cats_raw as $term ) {
-        $cats_map[ $term->slug ] = $term;
+$core_topics = array(
+    array(
+        'slug' => 'tinnitus',
+        'title' => '耳鸣专题',
+        'desc' => '了解耳鸣常见场景、可能原因与改善建议',
+    ),
+    array(
+        'slug' => 'hearing-loss',
+        'title' => '听力下降',
+        'desc' => '识别听力下降的早期表现与日常影响',
+    ),
+    array(
+        'slug' => 'hearing-aids',
+        'title' => '助听器百科',
+        'desc' => '了解助听器选购、佩戴、使用误区与常见问题',
+    ),
+    array(
+        'slug' => 'ai-hearing',
+        'title' => 'AI智能助听',
+        'desc' => '了解 AI 降噪、场景识别与智能助听体验',
+    ),
+);
+
+$hot_fallback = array(
+    array( 'label' => '耳鸣越来越严重怎么办？', 'url' => '/knowledge/tinnitus/' ),
+    array( 'label' => '晚上耳鸣特别明显怎么办？', 'url' => '/knowledge/tinnitus/' ),
+    array( 'label' => '老人听不清别人说话怎么办？', 'url' => '/knowledge/hearing-loss/' ),
+    array( 'label' => '助听器会越戴越聋吗？', 'url' => '/knowledge/hearing-aids/' ),
+    array( 'label' => 'AI助听器真的有用吗？', 'url' => '/knowledge/ai-hearing/' ),
+    array( 'label' => '第一次给父母买助听器怎么选？', 'url' => '/knowledge/hearing-aids/' ),
+);
+$merged_hot = array();
+foreach ( $hot as $row ) {
+    if ( empty( $row['label'] ) ) continue;
+    $merged_hot[] = $row;
+}
+if ( count( $merged_hot ) < 6 ) {
+    foreach ( $hot_fallback as $fb ) {
+        $exists = false;
+        foreach ( $merged_hot as $m ) {
+            if ( $m['label'] === $fb['label'] ) { $exists = true; break; }
+        }
+        if ( ! $exists ) $merged_hot[] = $fb;
+        if ( count( $merged_hot ) >= 6 ) break;
     }
 }
-$cats = array();
-foreach ( $cat_order as $slug ) {
-    if ( isset( $cats_map[ $slug ] ) ) {
-        $cats[] = $cats_map[ $slug ];
-    }
-}
+$merged_hot = array_slice( $merged_hot, 0, 6 );
 
 $trending = new WP_Query( array(
     'post_type'      => 'knowledge_article',
@@ -74,8 +108,7 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
       <?php endif; ?>
       <form class="bkh-search bkh-search-hero" role="search" method="get" action="<?php echo esc_url( bkh_url( '/knowledge/' ) ); ?>">
         <input type="search" name="s" placeholder="<?php echo esc_attr( $hero_ph ); ?>" aria-label="搜索听力知识">
-        <input type="hidden" name="post_type[]" value="knowledge_article">
-        <input type="hidden" name="post_type[]" value="knowledge_topic">
+        <input type="hidden" name="post_type" value="knowledge_article">
         <button type="submit">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           搜索
@@ -84,31 +117,26 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
     </div>
   </section>
 
-  <?php if ( ! empty( $cats ) ) : ?>
   <section class="bkh-tabs">
     <div class="bkh-wrap">
       <nav class="bkh-tab-nav" aria-label="知识分类">
         <a class="bkh-tab is-active" href="<?php echo esc_url( bkh_url( '/knowledge/' ) ); ?>">全部</a>
-        <?php foreach ( $cats as $c ) : ?>
-          <a class="bkh-tab" href="<?php echo esc_url( bkh_category_url( $c->slug ) ); ?>">
-            <?php echo esc_html( $cat_labels[ $c->slug ] ?? $c->name ); ?>
-          </a>
+        <?php foreach ( $tab_order as $slug ) : ?>
+          <a class="bkh-tab" href="<?php echo esc_url( bkh_url( '/knowledge/' . $slug . '/' ) ); ?>"><?php echo esc_html( $tab_labels[ $slug ] ); ?></a>
         <?php endforeach; ?>
       </nav>
     </div>
   </section>
-  <?php endif; ?>
 
-  <?php if ( ! empty( $hot ) ) : ?>
   <section class="bkh-hot">
     <div class="bkh-wrap">
       <h2 class="bkh-section-title">热门问题入口</h2>
       <div class="bkh-hot-grid">
-        <?php foreach ( $hot as $q ) :
-          $url = $q['url'] ?: bkh_url( '/knowledge/' );
+        <?php foreach ( $merged_hot as $q ) :
+          $url = $q['url'] ?: '/knowledge/';
           if ( strpos( $url, 'http' ) !== 0 && substr( $url, 0, 1 ) !== '/' ) $url = '/' . $url;
         ?>
-          <a class="bkh-hot-card" href="<?php echo esc_url( $url ); ?>">
+          <a class="bkh-hot-card" href="<?php echo esc_url( bkh_url( $url ) ); ?>">
             <span class="bkh-hot-q"><?php echo esc_html( $q['label'] ); ?></span>
             <span class="bkh-hot-arrow" aria-hidden="true">→</span>
           </a>
@@ -116,26 +144,21 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
       </div>
     </div>
   </section>
-  <?php endif; ?>
 
-  <?php if ( ! empty( $cats ) ) : ?>
   <section class="bkh-topics">
     <div class="bkh-wrap">
       <h2 class="bkh-section-title">专题入口区</h2>
       <div class="bkh-topic-grid">
-        <?php foreach ( $cats as $c ) :
-          $url = bkh_category_url( $c->slug );
-        ?>
-          <a class="bkh-topic-card" href="<?php echo esc_url( $url ); ?>">
-            <h3 class="bkh-topic-name"><?php echo esc_html( $cat_labels[ $c->slug ] ?? $c->name ); ?></h3>
-            <p class="bkh-topic-desc"><?php echo esc_html( $c->description ?: ( '探索' . ( $cat_labels[ $c->slug ] ?? $c->name ) . '相关知识与建议。' ) ); ?></p>
+        <?php foreach ( $core_topics as $topic ) : ?>
+          <a class="bkh-topic-card" href="<?php echo esc_url( bkh_url( '/knowledge/' . $topic['slug'] . '/' ) ); ?>">
+            <h3 class="bkh-topic-name"><?php echo esc_html( $topic['title'] ); ?></h3>
+            <p class="bkh-topic-desc"><?php echo esc_html( $topic['desc'] ); ?></p>
             <span class="bkh-topic-link">进入专题 →</span>
           </a>
         <?php endforeach; ?>
       </div>
     </div>
   </section>
-  <?php endif; ?>
 
   <?php if ( $trending->have_posts() ) : ?>
   <section class="bkh-trending">
@@ -156,7 +179,7 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
   <?php if ( $articles->have_posts() ) : ?>
   <section class="bkh-recommended">
     <div class="bkh-wrap">
-      <h2 class="bkh-section-title">最新文章</h2>
+      <h2 class="bkh-section-title">推荐阅读</h2>
       <div class="bkh-article-grid">
         <?php while ( $articles->have_posts() ) : $articles->the_post();
           $terms = wp_get_object_terms( get_the_ID(), 'knowledge_category' );
@@ -166,9 +189,7 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
           $read_minutes = max( 1, (int) ceil( $word_count / 260 ) );
         ?>
           <article class="bkh-art-card">
-            <?php if ( $thumb ) : ?>
-              <a href="<?php the_permalink(); ?>" class="bkh-art-thumb-wrap"><img src="<?php echo esc_url( $thumb ); ?>" alt="<?php echo esc_attr( get_the_title() ); ?>" loading="lazy"></a>
-            <?php endif; ?>
+            <?php if ( $thumb ) : ?><a href="<?php the_permalink(); ?>" class="bkh-art-thumb-wrap"><img src="<?php echo esc_url( $thumb ); ?>" alt="<?php echo esc_attr( get_the_title() ); ?>" loading="lazy"></a><?php endif; ?>
             <div class="bkh-art-body">
               <?php if ( $cat_label ) : ?><span class="bkh-art-tag"><?php echo esc_html( $cat_label ); ?></span><?php endif; ?>
               <h3 class="bkh-art-title"><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
@@ -185,6 +206,21 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
     </div>
   </section>
   <?php endif; ?>
+
+  <section class="bkh-cta bkh-cta-soft">
+    <div class="bkh-wrap">
+      <div class="bkh-cta-inner">
+        <div class="bkh-cta-text">
+          <h2 class="bkh-cta-title">想了解父母的听力情况？</h2>
+          <p class="bkh-cta-desc">如果家人经常听不清、电视声音越开越大，建议先了解听力下降的常见表现，再结合听力测试或专业建议判断是否需要助听方案。</p>
+        </div>
+        <div class="bkh-cta-actions">
+          <a class="bkh-btn bkh-btn-primary" href="<?php echo esc_url( bkh_url( '/knowledge/hearing-loss/' ) ); ?>">了解听力下降</a>
+          <a class="bkh-btn bkh-btn-ghost" href="<?php echo esc_url( bkh_url( '/knowledge/hearing-aids/' ) ); ?>">查看助听器选购指南</a>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <section class="bkh-bottom-nav">
     <div class="bkh-wrap">
