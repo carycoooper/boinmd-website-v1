@@ -6,8 +6,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  *   GET /wp-json/boin/v1/social-videos
  *   GET /wp-json/boin/v1/knowledge-articles
  *   GET /wp-json/boin/v1/knowledge-topics
+ *   POST /wp-json/boin/v1/knowledge-articles/import
  *
- * All read-only public endpoints for now.
+ * Public endpoints are read-only; import requires an authenticated editor.
  */
 class BKH_REST {
     private static $instance;
@@ -46,9 +47,19 @@ class BKH_REST {
             'callback'            => array( $this, 'get_topics' ),
             'permission_callback' => '__return_true',
         ) );
+
+        register_rest_route( BKH_REST_NS, '/knowledge-articles/import', array(
+            'methods'             => 'POST',
+            'callback'            => array( $this, 'import_article' ),
+            'permission_callback' => array( $this, 'can_import_article' ),
+        ) );
     }
 
     /* ============== handlers ============== */
+
+    public function can_import_article() {
+        return current_user_can( 'edit_posts' );
+    }
 
     public function get_social_videos( $req ) {
         $args = array(
@@ -149,5 +160,119 @@ class BKH_REST {
             );
         }
         return rest_ensure_response( array( 'total' => count( $items ), 'items' => $items ) );
+    }
+
+    public function import_article( $req ) {
+        $data = $req->get_json_params();
+        if ( ! is_array( $data ) ) $data = array();
+
+        $title = sanitize_text_field( $data['title'] ?? '' );
+        $slug  = sanitize_title( $data['slug'] ?? '' );
+        if ( $title === '' || $slug === '' ) {
+            return new WP_Error( 'bkh_missing_required', 'title and slug are required.', array( 'status' => 400 ) );
+        }
+
+        $status = sanitize_key( $data['status'] ?? 'draft' );
+        if ( ! in_array( $status, array( 'draft', 'pending', 'publish' ), true ) ) {
+            $status = 'draft';
+        }
+        if ( $status === 'publish' && ! current_user_can( 'publish_posts' ) ) {
+            $status = 'draft';
+        }
+
+        $postarr = array(
+            'post_type'    => 'knowledge_article',
+            'post_status'  => $status,
+            'post_title'   => $title,
+            'post_name'    => $slug,
+            'post_excerpt' => wp_kses_post( $data['excerpt'] ?? '' ),
+            'post_content' => wp_kses_post( $data['content'] ?? '' ),
+        );
+
+        $existing = get_page_by_path( $slug, OBJECT, 'knowledge_article' );
+        if ( $existing instanceof WP_Post ) {
+            $postarr['ID'] = $existing->ID;
+            $post_id = wp_update_post( $postarr, true );
+        } else {
+            $post_id = wp_insert_post( $postarr, true );
+        }
+
+        if ( is_wp_error( $post_id ) ) {
+            return $post_id;
+        }
+
+        $category = sanitize_title( $data['category'] ?? '' );
+        if ( $category !== '' ) {
+            $term = term_exists( $category, 'knowledge_category' );
+            if ( ! $term ) {
+                $term = wp_insert_term( $category, 'knowledge_category', array( 'slug' => $category ) );
+            }
+            if ( ! is_wp_error( $term ) ) {
+                wp_set_object_terms( $post_id, array( $category ), 'knowledge_category', false );
+            }
+        }
+
+        if ( array_key_exists( 'summary', $data ) ) {
+            update_post_meta( $post_id, 'summary', sanitize_textarea_field( $data['summary'] ) );
+        }
+        if ( array_key_exists( 'featured_priority', $data ) ) {
+            update_post_meta( $post_id, '_bkh_featured_priority', (int) $data['featured_priority'] );
+        }
+        if ( isset( $data['faqs'] ) && is_array( $data['faqs'] ) ) {
+            update_post_meta( $post_id, '_bkh_faqs', $this->sanitize_faqs( $data['faqs'] ) );
+        }
+        if ( isset( $data['videos'] ) && is_array( $data['videos'] ) ) {
+            update_post_meta( $post_id, '_bkh_videos', $this->sanitize_videos( $data['videos'] ) );
+        }
+
+        clean_post_cache( $post_id );
+
+        return rest_ensure_response( array(
+            'post_id'   => $post_id,
+            'status'    => get_post_status( $post_id ),
+            'slug'      => get_post_field( 'post_name', $post_id ),
+            'permalink' => get_permalink( $post_id ),
+            'edit_url'  => get_edit_post_link( $post_id, 'raw' ),
+            'preview'   => get_preview_post_link( $post_id ),
+        ) );
+    }
+
+    private function sanitize_faqs( $faqs ) {
+        $out = array();
+        foreach ( $faqs as $f ) {
+            if ( ! is_array( $f ) ) continue;
+            $q = sanitize_text_field( $f['question'] ?? $f['q'] ?? '' );
+            $a = sanitize_textarea_field( $f['answer'] ?? $f['a'] ?? '' );
+            if ( $q === '' || $a === '' ) continue;
+            $out[] = array( 'question' => $q, 'answer' => $a );
+        }
+        return $out;
+    }
+
+    private function sanitize_videos( $videos ) {
+        $allowed = array( 'bilibili', 'youtube', 'douyin', 'wechat_video', 'kuaishou' );
+        $out = array();
+        foreach ( $videos as $v ) {
+            if ( ! is_array( $v ) ) continue;
+            $platform = sanitize_key( $v['platform'] ?? '' );
+            $url = esc_url_raw( $v['video_url'] ?? '' );
+            if ( ! in_array( $platform, $allowed, true ) || $url === '' ) continue;
+            $out[] = array(
+                'platform'      => $platform,
+                'video_title'   => sanitize_text_field( $v['video_title'] ?? '' ),
+                'video_url'     => $url,
+                'video_id'      => sanitize_text_field( $v['video_id'] ?? '' ),
+                'embed_code'    => wp_kses_post( $v['embed_code'] ?? '' ),
+                'cover_image'   => esc_url_raw( $v['cover_image'] ?? '' ),
+                'duration'      => sanitize_text_field( $v['duration'] ?? '' ),
+                'publish_date'  => sanitize_text_field( $v['publish_date'] ?? '' ),
+                'display_order' => (int) ( $v['display_order'] ?? 0 ),
+                'is_primary'    => ! empty( $v['is_primary'] ) ? 1 : 0,
+                'account_name'  => sanitize_text_field( $v['account_name'] ?? '' ),
+                'account_url'   => esc_url_raw( $v['account_url'] ?? '' ),
+                'tracking_code' => sanitize_text_field( $v['tracking_code'] ?? '' ),
+            );
+        }
+        return $out;
     }
 }
