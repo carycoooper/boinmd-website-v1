@@ -14,6 +14,14 @@ slug：night-tinnitus
 
 category：tinnitus
 
+featured_priority：10
+
+bilibili_video_url：待补充
+
+youtube_video_url：待补充
+
+视频适配度：高
+
 summary：晚上耳鸣更明显，常见原因是环境变安静后，耳鸣更容易被注意到；也可能和疲劳、压力、睡眠不足、噪音暴露或听力变化有关。若持续影响睡眠，建议结合听力测试或专业建议判断。
 
 excerpt：晚上耳鸣明显并不一定代表问题突然加重，很多时候和环境安静、注意力集中、疲劳和睡眠状态有关。本文帮你了解常见原因、应对方式和什么时候建议做听力评估。
@@ -89,6 +97,14 @@ slug：one-ear-ringing
 
 category：tinnitus
 
+featured_priority：50
+
+bilibili_video_url：待补充
+
+youtube_video_url：待补充
+
+视频适配度：中
+
 summary：一只耳朵耳鸣并不少见，可能与疲劳、噪音暴露、耳部状态或听力变化有关。如果持续存在，或伴随听不清、耳闷、眩晕等情况，建议尽早做专业评估。
 
 excerpt：单侧耳鸣让人更容易紧张。本文解释一只耳朵耳鸣的常见原因、需要关注的信号，以及什么时候建议做听力测试。
@@ -160,9 +176,17 @@ A：先记录症状和场景，减少噪音刺激。如果持续存在或伴随�
 
 title：老人听不清别人说话怎么办？
 
-slug：senior-cannot-hear-speech
+slug：cannot-hear-speech
 
 category：hearing-loss
+
+featured_priority：20
+
+bilibili_video_url：待补充
+
+youtube_video_url：待补充
+
+视频适配度：高
 
 summary：老人听不清别人说话，可能与年龄相关听力变化、环境噪音、说话距离或沟通习惯有关。建议先观察具体场景，必要时做听力评估，再判断是否需要助听方案。
 
@@ -238,6 +262,14 @@ slug：tv-volume-louder
 
 category：hearing-loss
 
+featured_priority：60
+
+bilibili_video_url：待补充
+
+youtube_video_url：待补充
+
+视频适配度：高
+
 summary：电视声音越开越大，可能是听力变化的表现之一，也可能与电视音源、环境噪音或观看距离有关。如果家人反复觉得音量过大，建议关注听力情况。
 
 excerpt：父母看电视声音越来越大，是很多家庭最早发现听力变化的场景。本文说明如何判断、如何沟通，以及什么时候建议做听力评估。
@@ -308,6 +340,14 @@ title：第一次给父母买助听器怎么选？
 slug：first-hearing-aid-for-parents
 
 category：hearing-aids
+
+featured_priority：30
+
+bilibili_video_url：待补充
+
+youtube_video_url：待补充
+
+视频适配度：高
 
 summary：第一次给父母买助听器，建议先了解听力情况，再看佩戴舒适度、操作难度、售后服务、验配支持和使用场景。不要只看价格或外观。
 
@@ -380,6 +420,14 @@ slug：hearing-aid-vs-amplifier
 
 category：hearing-aids
 
+featured_priority：70
+
+bilibili_video_url：待补充
+
+youtube_video_url：待补充
+
+视频适配度：中
+
 summary：助听器和普通扩音器的核心区别在于用途、声音处理方式、适配方式和合规属性。助听器通常需要结合听力情况和使用场景进行选择，而扩音器主要是简单放大声音。
 
 excerpt：很多人第一次了解助听器时，会把它和扩音器混在一起。本文用通俗方式说明两者区别，帮助子女给父母选择时少走弯路。
@@ -444,6 +492,14 @@ title：AI助听器真的有用吗？
 slug：ai-hearing-aid-useful
 
 category：ai-hearing
+
+featured_priority：40
+
+bilibili_video_url：待补充
+
+youtube_video_url：待补充
+
+视频适配度：高
 
 summary：AI 助听器是否有用，取决于听力情况、设备能力、使用环境和调试方式。AI 常用于降噪、场景识别、语音增强等方向，可能有助于提升部分场景下的听声体验。
 
@@ -516,6 +572,14 @@ slug：ai-noise-reduction-hearing-aid
 
 category：ai-hearing
 
+featured_priority：80
+
+bilibili_video_url：待补充
+
+youtube_video_url：待补充
+
+视频适配度：中
+
 summary：AI 降噪助听器通常指利用智能算法识别环境声音，并尝试减少部分背景噪声干扰、提升语音听感的助听设备。它不能消除所有噪声，具体体验因场景而异。
 
 excerpt：AI 降噪是助听器里常见的智能功能之一。本文用通俗语言解释它的含义、适用场景和选择时要注意的问题。
@@ -576,4 +640,3 @@ A：不同设备处理方式不同，调试也会影响体验。建议结合实�
 Q：AI 降噪是不是越强越好？
 
 A：不一定。过强处理可能影响自然听感，关键是适合具体场景和个人需求。
-
