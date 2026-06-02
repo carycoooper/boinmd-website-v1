@@ -218,6 +218,9 @@ class BKH_REST {
         if ( array_key_exists( 'featured_priority', $data ) ) {
             update_post_meta( $post_id, '_bkh_featured_priority', (int) $data['featured_priority'] );
         }
+        if ( isset( $data['key_points'] ) && is_array( $data['key_points'] ) ) {
+            update_post_meta( $post_id, '_bkh_key_points', $this->sanitize_key_points( $data['key_points'] ) );
+        }
         if ( isset( $data['faqs'] ) && is_array( $data['faqs'] ) ) {
             update_post_meta( $post_id, '_bkh_faqs', $this->sanitize_faqs( $data['faqs'] ) );
         }
@@ -247,6 +250,17 @@ class BKH_REST {
             $out[] = array( 'question' => $q, 'answer' => $a );
         }
         return $out;
+    }
+
+    private function sanitize_key_points( $points ) {
+        $out = array();
+        foreach ( $points as $point ) {
+            $point = sanitize_text_field( $point );
+            if ( $point !== '' ) {
+                $out[] = $point;
+            }
+        }
+        return array_slice( $out, 0, 5 );
     }
 
     private function sanitize_videos( $videos ) {

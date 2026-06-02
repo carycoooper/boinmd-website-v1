@@ -29,6 +29,12 @@ if ( $summary === '' ) $summary = trim( (string) get_post_meta( $post_id, 'answe
 if ( $summary === '' ) $summary = trim( (string) get_post_meta( $post_id, 'ai_summary', true ) );
 if ( $summary === '' && has_excerpt() ) $summary = trim( (string) get_the_excerpt() );
 
+$key_points = get_post_meta( $post_id, '_bkh_key_points', true );
+if ( ! is_array( $key_points ) ) {
+    $key_points = array();
+}
+$key_points = array_values( array_filter( array_map( 'trim', $key_points ) ) );
+
 // Build a lightweight server-side TOC by scanning H2/H3 and injecting IDs.
 $content_html = apply_filters( 'the_content', get_post_field( 'post_content', $post_id ) );
 $toc_items = array();
@@ -82,7 +88,6 @@ if ( preg_match_all( '/<h([23])([^>]*)>(.*?)<\/h\1>/is', $content_html, $matches
 
 $ai_summary_block = trim( (string) get_post_meta( $post_id, 'ai_summary', true ) );
 if ( $ai_summary_block === '' ) $ai_summary_block = trim( (string) get_post_meta( $post_id, 'answer', true ) );
-if ( $ai_summary_block === '' ) $ai_summary_block = trim( (string) get_post_meta( $post_id, 'summary', true ) );
 
 $cta_title = '继续了解听力知识';
 $cta_desc = '从常见听力问题出发，逐步了解专题内容与应对思路。';
@@ -146,11 +151,21 @@ if ( $cat_slug === 'tinnitus' ) {
       <figure class="bkh-art-cover"><?php the_post_thumbnail( 'large' ); ?></figure>
     <?php endif; ?>
 
-    <?php if ( $ai_summary_block !== '' ) : ?>
+    <?php if ( ! empty( $key_points ) || $ai_summary_block !== '' ) : ?>
       <section class="bkh-block">
         <div class="bkh-wrap bkh-wrap-text">
           <h2 class="bkh-section-title">快速了解</h2>
-          <div class="bkh-quick-card"><?php echo wp_kses_post( wpautop( $ai_summary_block ) ); ?></div>
+          <?php if ( ! empty( $key_points ) ) : ?>
+            <div class="bkh-summary-box">
+              <ol class="bkh-summary-list">
+                <?php foreach ( array_slice( $key_points, 0, 5 ) as $point ) : ?>
+                  <li><?php echo esc_html( $point ); ?></li>
+                <?php endforeach; ?>
+              </ol>
+            </div>
+          <?php else : ?>
+            <div class="bkh-quick-card"><?php echo wp_kses_post( wpautop( $ai_summary_block ) ); ?></div>
+          <?php endif; ?>
         </div>
       </section>
     <?php endif; ?>
