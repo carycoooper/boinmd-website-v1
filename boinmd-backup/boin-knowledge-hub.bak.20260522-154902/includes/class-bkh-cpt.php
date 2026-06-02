@@ -63,6 +63,7 @@ class BKH_CPT {
                 'name'               => '知识文章',
                 'singular_name'      => '知识文章',
                 'menu_name'          => '知识文章',
+                'archives'           => '听力知识中心',
                 'add_new'            => '新增',
                 'add_new_item'       => '新增知识文章',
                 'edit_item'          => '编辑知识文章',

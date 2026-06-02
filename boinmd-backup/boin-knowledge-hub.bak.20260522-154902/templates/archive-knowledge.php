@@ -84,14 +84,14 @@ $trending = new WP_Query( array(
             'compare' => '>=',
         ),
     ),
-    'orderby'        => array( 'meta_value_num' => 'DESC', 'date' => 'DESC' ),
+    'orderby'        => array( 'meta_value_num' => 'ASC', 'date' => 'DESC' ),
 ) );
 
 $articles = new WP_Query( array(
     'post_type'      => 'knowledge_article',
     'posts_per_page' => 9,
     'meta_key'       => '_bkh_featured_priority',
-    'orderby'        => array( 'meta_value_num' => 'DESC', 'date' => 'DESC' ),
+    'orderby'        => array( 'meta_value_num' => 'ASC', 'date' => 'DESC' ),
 ) );
 
 wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array(), BKH_VERSION );

@@ -225,6 +225,17 @@ function bkh_get_product_page_url() {
 }
 
 /**
+ * Use a user-facing SEO title for the knowledge hub archive.
+ */
+function bkh_filter_document_title_parts( $title ) {
+    if ( is_post_type_archive( 'knowledge_article' ) ) {
+        $title['title'] = '听力知识中心';
+    }
+    return $title;
+}
+add_filter( 'document_title_parts', 'bkh_filter_document_title_parts', 20 );
+
+/**
  * Get visible FAQs for an article/topic with backward-compatible field support.
  */
 function bkh_get_visible_faqs( $post_id ) {
