@@ -215,8 +215,8 @@ if ( $cat_slug === 'tinnitus' ) {
       <div class="bkh-wrap">
         <h2 class="bkh-section-title">相关推荐</h2>
         <?php if ( $related->have_posts() ) : ?>
-          <div class="bkh-article-grid">
-            <?php while ( $related->have_posts() ) : $related->the_post(); $thumb = get_the_post_thumbnail_url( null, 'medium' ); ?>
+          <div class="bkh-article-grid bkh-related-grid">
+            <?php while ( $related->have_posts() ) : $related->the_post(); $thumb = get_the_post_thumbnail_url( null, 'large' ); ?>
               <article class="bkh-art-card">
                 <?php if ( $thumb ) : ?><a href="<?php the_permalink(); ?>" class="bkh-art-thumb-wrap"><img src="<?php echo esc_url( $thumb ); ?>" alt="<?php echo esc_attr( get_the_title() ); ?>" loading="lazy"></a><?php endif; ?>
                 <div class="bkh-art-body">
