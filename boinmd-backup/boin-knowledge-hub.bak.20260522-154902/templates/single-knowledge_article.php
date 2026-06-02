@@ -148,7 +148,7 @@ if ( $cat_slug === 'tinnitus' ) {
     </header>
 
     <?php if ( has_post_thumbnail() ) : ?>
-      <figure class="bkh-art-cover"><?php the_post_thumbnail( 'large' ); ?></figure>
+      <figure class="bkh-art-cover"><?php the_post_thumbnail( 'full' ); ?></figure>
     <?php endif; ?>
 
     <?php if ( ! empty( $key_points ) || $ai_summary_block !== '' ) : ?>
@@ -216,7 +216,7 @@ if ( $cat_slug === 'tinnitus' ) {
         <h2 class="bkh-section-title">相关推荐</h2>
         <?php if ( $related->have_posts() ) : ?>
           <div class="bkh-article-grid bkh-related-grid">
-            <?php while ( $related->have_posts() ) : $related->the_post(); $thumb = get_the_post_thumbnail_url( null, 'large' ); ?>
+            <?php while ( $related->have_posts() ) : $related->the_post(); $thumb = get_the_post_thumbnail_url( null, 'full' ); ?>
               <article class="bkh-art-card">
                 <?php if ( $thumb ) : ?><a href="<?php the_permalink(); ?>" class="bkh-art-thumb-wrap"><img src="<?php echo esc_url( $thumb ); ?>" alt="<?php echo esc_attr( get_the_title() ); ?>" loading="lazy"></a><?php endif; ?>
                 <div class="bkh-art-body">

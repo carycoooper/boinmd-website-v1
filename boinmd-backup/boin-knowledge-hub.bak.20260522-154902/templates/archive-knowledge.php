@@ -184,7 +184,7 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
         <?php while ( $articles->have_posts() ) : $articles->the_post();
           $terms = wp_get_object_terms( get_the_ID(), 'knowledge_category' );
           $cat_label = ( ! is_wp_error( $terms ) && ! empty( $terms ) ) ? $terms[0]->name : '';
-          $thumb = get_the_post_thumbnail_url( null, 'large' );
+          $thumb = get_the_post_thumbnail_url( null, 'full' );
           $read_minutes = bkh_get_reading_minutes( get_the_ID(), 450 );
         ?>
           <article class="bkh-art-card">
