@@ -152,7 +152,7 @@ if ( $cat_slug === 'tinnitus' ) {
     <?php endif; ?>
 
     <?php if ( ! empty( $key_points ) || $ai_summary_block !== '' ) : ?>
-      <section class="bkh-block">
+      <section class="bkh-block bkh-art-quick-section">
         <div class="bkh-wrap bkh-wrap-text">
           <h2 class="bkh-section-title">快速了解</h2>
           <?php if ( ! empty( $key_points ) ) : ?>
@@ -171,7 +171,7 @@ if ( $cat_slug === 'tinnitus' ) {
     <?php endif; ?>
 
     <?php if ( count( $toc_items ) >= 2 ) : ?>
-      <section class="bkh-block">
+      <section class="bkh-block bkh-art-toc-section">
         <div class="bkh-wrap bkh-wrap-text">
           <h2 class="bkh-section-title">目录</h2>
           <nav class="bkh-toc" aria-label="文章目录">

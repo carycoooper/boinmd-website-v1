@@ -3,7 +3,7 @@
  * Plugin Name: Boin Knowledge Hub
  * Plugin URI:  https://www.boinmd.com.cn/
  * Description: 博音听力知识中心 — 自定义内容类型 (knowledge_article / knowledge_topic)、专题、视频接口、REST、Schema、URL rewrite (/knowledge/...).
- * Version:     1.0.2
+ * Version:     1.0.3
  * Author:      博音 BOINMD
  * Text Domain: boin-knowledge-hub
  * Requires PHP: 7.4
@@ -12,7 +12,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'BKH_VERSION',  '1.0.2' );
+define( 'BKH_VERSION',  '1.0.3' );
 define( 'BKH_FILE',     __FILE__ );
 define( 'BKH_DIR',      plugin_dir_path( __FILE__ ) );
 define( 'BKH_URL',      plugin_dir_url( __FILE__ ) );
