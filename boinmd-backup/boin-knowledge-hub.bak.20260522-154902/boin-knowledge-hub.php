@@ -3,7 +3,7 @@
  * Plugin Name: Boin Knowledge Hub
  * Plugin URI:  https://www.boinmd.com.cn/
  * Description: 博音听力知识中心 — 自定义内容类型 (knowledge_article / knowledge_topic)、专题、视频接口、REST、Schema、URL rewrite (/knowledge/...).
- * Version:     1.0.8
+ * Version:     1.0.9
  * Author:      博音 BOINMD
  * Text Domain: boin-knowledge-hub
  * Requires PHP: 7.4
@@ -12,7 +12,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'BKH_VERSION',  '1.0.8' );
+define( 'BKH_VERSION',  '1.0.9' );
 define( 'BKH_FILE',     __FILE__ );
 define( 'BKH_DIR',      plugin_dir_path( __FILE__ ) );
 define( 'BKH_URL',      plugin_dir_url( __FILE__ ) );
@@ -33,6 +33,7 @@ require_once BKH_DIR . 'includes/class-bkh-schema.php';
 require_once BKH_DIR . 'includes/class-bkh-rest.php';
 require_once BKH_DIR . 'includes/class-bkh-admin.php';
 require_once BKH_DIR . 'includes/class-bkh-shortcodes.php';
+require_once BKH_DIR . 'includes/class-bkh-sitemap.php';
 
 require_once BKH_DIR . 'includes/social-providers/abstract-bkh-provider.php';
 require_once BKH_DIR . 'includes/social-providers/class-bilibili-provider.php';
@@ -51,6 +52,7 @@ add_action( 'plugins_loaded', function () {
     BKH_REST::instance();
     BKH_Admin::instance();
     BKH_Shortcodes::instance();
+    BKH_Sitemap::instance();
 } );
 
 /* ===== Activation / Deactivation ===== */
