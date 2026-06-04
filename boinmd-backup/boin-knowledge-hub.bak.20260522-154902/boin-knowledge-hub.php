@@ -3,7 +3,7 @@
  * Plugin Name: Boin Knowledge Hub
  * Plugin URI:  https://www.boinmd.com.cn/
  * Description: 鍗氶煶鍚姏鐭ヨ瘑涓績 鈥?鑷畾涔夊唴瀹圭被鍨?(knowledge_article / knowledge_topic)銆佷笓棰樸€佽棰戞帴鍙ｃ€丷EST銆丼chema銆乁RL rewrite (/knowledge/...).
- * Version:     1.0.13
+ * Version:     1.0.14
  * Author:      鍗氶煶 BOINMD
  * Text Domain: boin-knowledge-hub
  * Requires PHP: 7.4
@@ -12,7 +12,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'BKH_VERSION',  '1.0.13' );
+define( 'BKH_VERSION',  '1.0.14' );
 define( 'BKH_FILE',     __FILE__ );
 define( 'BKH_DIR',      plugin_dir_path( __FILE__ ) );
 define( 'BKH_URL',      plugin_dir_url( __FILE__ ) );

@@ -111,11 +111,11 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
         <p class="bkh-hero-sub"><?php echo esc_html( $hero_subtitle ); ?></p>
       <?php endif; ?>
       <form class="bkh-search bkh-search-hero" role="search" method="get" action="<?php echo esc_url( bkh_url( '/knowledge/' ) ); ?>">
-        <input type="search" name="s" placeholder="<?php echo esc_attr( $hero_ph ); ?>" aria-label="鎼滅储鍚姏鐭ヨ瘑">
+        <input type="search" name="s" placeholder="<?php echo esc_attr( $hero_ph ); ?>" aria-label="搜索听力知识">
         <input type="hidden" name="post_type" value="knowledge_article">
         <button type="submit">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          鎼滅储
+          搜索
         </button>
       </form>
     </div>
@@ -123,8 +123,8 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
 
   <section class="bkh-tabs">
     <div class="bkh-wrap">
-      <nav class="bkh-tab-nav" aria-label="鐭ヨ瘑鍒嗙被">
-        <a class="bkh-tab is-active" href="<?php echo esc_url( bkh_url( '/knowledge/' ) ); ?>">鍏ㄩ儴</a>
+      <nav class="bkh-tab-nav" aria-label="知识分类">
+        <a class="bkh-tab is-active" href="<?php echo esc_url( bkh_url( '/knowledge/' ) ); ?>">全部</a>
         <?php foreach ( $tab_order as $slug ) : ?>
           <a class="bkh-tab" href="<?php echo esc_url( bkh_url( '/knowledge/' . $slug . '/' ) ); ?>"><?php echo esc_html( $tab_labels[ $slug ] ); ?></a>
         <?php endforeach; ?>
@@ -134,7 +134,7 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
 
   <section class="bkh-hot">
     <div class="bkh-wrap">
-      <h2 class="bkh-section-title">鐑棬闂鍏ュ彛</h2>
+      <h2 class="bkh-section-title">热门问题入口</h2>
       <div class="bkh-hot-grid">
         <?php foreach ( $merged_hot as $q ) :
           $url = $q['url'] ?: '/knowledge/';
@@ -142,7 +142,7 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
         ?>
           <a class="bkh-hot-card" href="<?php echo esc_url( bkh_url( $url ) ); ?>">
             <span class="bkh-hot-q"><?php echo esc_html( $q['label'] ); ?></span>
-            <span class="bkh-hot-arrow" aria-hidden="true">鈫?/span>
+            <span class="bkh-hot-arrow" aria-hidden="true">→</span>
           </a>
         <?php endforeach; ?>
       </div>
@@ -151,13 +151,13 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
 
   <section class="bkh-topics">
     <div class="bkh-wrap">
-      <h2 class="bkh-section-title">涓撻鍏ュ彛鍖?/h2>
+      <h2 class="bkh-section-title">专题入口区</h2>
       <div class="bkh-topic-grid">
         <?php foreach ( $core_topics as $topic ) : ?>
           <a class="bkh-topic-card" href="<?php echo esc_url( bkh_url( '/knowledge/' . $topic['slug'] . '/' ) ); ?>">
             <h3 class="bkh-topic-name"><?php echo esc_html( $topic['title'] ); ?></h3>
             <p class="bkh-topic-desc"><?php echo esc_html( $topic['desc'] ); ?></p>
-            <span class="bkh-topic-link">杩涘叆涓撻 鈫?/span>
+            <span class="bkh-topic-link">进入专题 →</span>
           </a>
         <?php endforeach; ?>
       </div>
@@ -233,12 +233,12 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
     <div class="bkh-wrap">
       <div class="bkh-cta-inner">
         <div class="bkh-cta-text">
-          <h2 class="bkh-cta-title">鎯充簡瑙ｇ埗姣嶇殑鍚姏鎯呭喌锛?/h2>
-          <p class="bkh-cta-desc">濡傛灉瀹朵汉缁忓父鍚笉娓呫€佺數瑙嗗０闊宠秺寮€瓒婂ぇ锛屽缓璁厛浜嗚В鍚姏涓嬮檷鐨勫父瑙佽〃鐜帮紝鍐嶇粨鍚堝惉鍔涙祴璇曟垨涓撲笟寤鸿鍒ゆ柇鏄惁闇€瑕佸姪鍚柟妗堛€?/p>
+          <h2 class="bkh-cta-title">想了解父母的听力情况？</h2>
+          <p class="bkh-cta-desc">如果家人经常听不清、电视声音越开越大，建议先了解听力下降的常见表现，再结合听力测试或专业建议判断是否需要助听方案。</p>
         </div>
         <div class="bkh-cta-actions">
-          <a class="bkh-btn bkh-btn-primary" href="<?php echo esc_url( bkh_url( '/knowledge/hearing-loss/' ) ); ?>">浜嗚В鍚姏涓嬮檷</a>
-          <a class="bkh-btn bkh-btn-ghost" href="<?php echo esc_url( bkh_url( '/knowledge/hearing-aids/' ) ); ?>">鏌ョ湅鍔╁惉鍣ㄩ€夎喘鎸囧崡</a>
+          <a class="bkh-btn bkh-btn-primary" href="<?php echo esc_url( bkh_url( '/knowledge/hearing-loss/' ) ); ?>">了解听力下降</a>
+          <a class="bkh-btn bkh-btn-ghost" href="<?php echo esc_url( bkh_url( '/knowledge/hearing-aids/' ) ); ?>">查看助听器选购指南</a>
         </div>
       </div>
     </div>
@@ -246,15 +246,15 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
 
   <section class="bkh-bottom-nav">
     <div class="bkh-wrap">
-      <h2 class="bkh-section-title bkh-section-title-sm">鐭ヨ瘑瀵艰埅</h2>
+      <h2 class="bkh-section-title bkh-section-title-sm">知识导航</h2>
       <ul class="bkh-bottom-list">
-        <li><a href="<?php echo esc_url( bkh_url( '/knowledge/tinnitus/' ) ); ?>">鑰抽福涓撻</a></li>
-        <li><a href="<?php echo esc_url( bkh_url( '/knowledge/hearing-loss/' ) ); ?>">鍚姏涓嬮檷</a></li>
-        <li><a href="<?php echo esc_url( bkh_url( '/knowledge/hearing-aids/' ) ); ?>">鍔╁惉鍣ㄧ櫨绉?/a></li>
-        <li><a href="<?php echo esc_url( bkh_url( '/knowledge/ai-hearing/' ) ); ?>">AI鏅鸿兘鍔╁惉</a></li>
-        <li><a href="<?php echo esc_url( bkh_url( '/knowledge/care/' ) ); ?>">浣跨敤涓庝繚鍏?/a></li>
-        <li><a href="<?php echo esc_url( bkh_url( '/knowledge/fitting/' ) ); ?>">楠岄厤鎸囧崡</a></li>
-        <li><a href="<?php echo esc_url( bkh_url( '/knowledge/stories/' ) ); ?>">鐢ㄦ埛妗堜緥</a></li>
+        <li><a href="<?php echo esc_url( bkh_url( '/knowledge/tinnitus/' ) ); ?>">耳鸣专题</a></li>
+        <li><a href="<?php echo esc_url( bkh_url( '/knowledge/hearing-loss/' ) ); ?>">听力下降</a></li>
+        <li><a href="<?php echo esc_url( bkh_url( '/knowledge/hearing-aids/' ) ); ?>">助听器百科</a></li>
+        <li><a href="<?php echo esc_url( bkh_url( '/knowledge/ai-hearing/' ) ); ?>">AI智能助听</a></li>
+        <li><a href="<?php echo esc_url( bkh_url( '/knowledge/care/' ) ); ?>">使用与保养</a></li>
+        <li><a href="<?php echo esc_url( bkh_url( '/knowledge/fitting/' ) ); ?>">验配指南</a></li>
+        <li><a href="<?php echo esc_url( bkh_url( '/knowledge/stories/' ) ); ?>">用户案例</a></li>
       </ul>
     </div>
   </section>
