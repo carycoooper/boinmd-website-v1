@@ -7,52 +7,52 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 get_header();
 
 $settings = get_option( BKH_OPT_SETTINGS, bkh_default_settings() );
-$hero_title    = $settings['hero_title'] ?? '鍚姏鐭ヨ瘑涓績';
+$hero_title    = $settings['hero_title'] ?? '听力知识中心';
 $hero_subtitle = $settings['hero_subtitle'] ?? '';
-$hero_ph       = $settings['hero_placeholder'] ?? '渚嬪锛氭櫄涓婅€抽福鐗瑰埆鏄庢樉鎬庝箞鍔烇紵';
+$hero_ph       = $settings['hero_placeholder'] ?? '例如：晚上耳鸣特别明显怎么办？';
 $hot           = $settings['hot_questions'] ?? array();
 
 $tab_order = array( 'tinnitus', 'hearing-loss', 'hearing-aids', 'ai-hearing', 'care', 'fitting', 'stories' );
 $tab_labels = array(
-    'tinnitus'     => '鑰抽福涓撻',
-    'hearing-loss' => '鍚姏涓嬮檷',
-    'hearing-aids' => '鍔╁惉鍣ㄧ櫨绉?,
-    'ai-hearing'   => 'AI鏅鸿兘鍔╁惉',
-    'care'         => '浣跨敤涓庝繚鍏?,
-    'fitting'      => '楠岄厤鎸囧崡',
-    'stories'      => '鐢ㄦ埛妗堜緥',
+    'tinnitus'     => '耳鸣专题',
+    'hearing-loss' => '听力下降',
+    'hearing-aids' => '助听器百科',
+    'ai-hearing'   => 'AI智能助听',
+    'care'         => '使用与保养',
+    'fitting'      => '验配指南',
+    'stories'      => '用户案例',
 );
 
 $core_topics = array(
     array(
-        'slug' => 'tinnitus',
-        'title' => '鑰抽福涓撻',
-        'desc' => '浜嗚В鑰抽福甯歌鍦烘櫙銆佸彲鑳藉師鍥犱笌鏀瑰杽寤鸿',
+        'slug'  => 'tinnitus',
+        'title' => '耳鸣专题',
+        'desc'  => '了解耳鸣常见场景、可能原因与改善建议',
     ),
     array(
-        'slug' => 'hearing-loss',
-        'title' => '鍚姏涓嬮檷',
-        'desc' => '璇嗗埆鍚姏涓嬮檷鐨勬棭鏈熻〃鐜颁笌鏃ュ父褰卞搷',
+        'slug'  => 'hearing-loss',
+        'title' => '听力下降',
+        'desc'  => '识别听力下降的早期表现与日常影响',
     ),
     array(
-        'slug' => 'hearing-aids',
-        'title' => '鍔╁惉鍣ㄧ櫨绉?,
-        'desc' => '浜嗚В鍔╁惉鍣ㄩ€夎喘銆佷僵鎴淬€佷娇鐢ㄨ鍖轰笌甯歌闂',
+        'slug'  => 'hearing-aids',
+        'title' => '助听器百科',
+        'desc'  => '了解助听器选购、佩戴、使用误区与常见问题',
     ),
     array(
-        'slug' => 'ai-hearing',
-        'title' => 'AI鏅鸿兘鍔╁惉',
-        'desc' => '浜嗚В AI 闄嶅櫔銆佸満鏅瘑鍒笌鏅鸿兘鍔╁惉浣撻獙',
+        'slug'  => 'ai-hearing',
+        'title' => 'AI智能助听',
+        'desc'  => '了解 AI 降噪、场景识别与智能助听体验',
     ),
 );
 
 $hot_fallback = array(
-    array( 'label' => '鑰抽福瓒婃潵瓒婁弗閲嶆€庝箞鍔烇紵', 'url' => '/knowledge/tinnitus/' ),
-    array( 'label' => '鏅氫笂鑰抽福鐗瑰埆鏄庢樉鎬庝箞鍔烇紵', 'url' => '/knowledge/tinnitus/' ),
-    array( 'label' => '鑰佷汉鍚笉娓呭埆浜鸿璇濇€庝箞鍔烇紵', 'url' => '/knowledge/hearing-loss/' ),
-    array( 'label' => '鍔╁惉鍣ㄤ細瓒婃埓瓒婅亱鍚楋紵', 'url' => '/knowledge/hearing-aids/' ),
-    array( 'label' => 'AI鍔╁惉鍣ㄧ湡鐨勬湁鐢ㄥ悧锛?, 'url' => '/knowledge/ai-hearing/' ),
-    array( 'label' => '绗竴娆＄粰鐖舵瘝涔板姪鍚櫒鎬庝箞閫夛紵', 'url' => '/knowledge/hearing-aids/' ),
+    array( 'label' => '耳鸣越来越严重怎么办？', 'url' => '/knowledge/tinnitus/' ),
+    array( 'label' => '晚上耳鸣特别明显怎么办？', 'url' => '/knowledge/tinnitus/' ),
+    array( 'label' => '老人听不清别人说话怎么办？', 'url' => '/knowledge/hearing-loss/' ),
+    array( 'label' => '助听器会越戴越聋吗？', 'url' => '/knowledge/hearing-aids/' ),
+    array( 'label' => 'AI助听器真的有用吗？', 'url' => '/knowledge/ai-hearing/' ),
+    array( 'label' => '第一次给父母买助听器怎么选？', 'url' => '/knowledge/hearing-aids/' ),
 );
 $merged_hot = array();
 foreach ( $hot as $row ) {
