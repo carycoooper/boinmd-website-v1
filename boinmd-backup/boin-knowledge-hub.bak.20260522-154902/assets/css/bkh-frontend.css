@@ -292,3 +292,11 @@
 .bkh-art-quick-section{padding-bottom:10px}
 .bkh-art-quick-section + .bkh-art-toc-section{padding-top:10px}
 @media(max-width:680px){.bkh-art-quick-section{padding-bottom:8px}.bkh-art-quick-section + .bkh-art-toc-section{padding-top:8px}}
+
+/* ===== Knowledge home pagination ===== */
+.bkh-pagination{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:34px;flex-wrap:wrap}
+.bkh-page-btn{display:inline-flex;align-items:center;justify-content:center;min-width:92px;padding:10px 18px;border:1px solid var(--bkh-b2);border-radius:999px;background:#fff;color:var(--bkh-purple);font-size:14px;font-weight:500;transition:all .24s ease;text-decoration:none}
+.bkh-page-btn:hover{border-color:var(--bkh-purple);box-shadow:0 10px 24px -14px rgba(74,45,117,.36);transform:translateY(-1px)}
+.bkh-page-btn-disabled{opacity:.42;pointer-events:none;color:var(--bkh-muted);background:var(--bkh-bg2)}
+.bkh-page-count{font-size:13px;color:var(--bkh-muted);letter-spacing:.04em}
+@media (max-width:680px){.bkh-pagination{gap:10px;margin-top:24px}.bkh-page-btn{min-width:84px;padding:9px 14px}.bkh-page-count{width:100%;text-align:center;order:-1}}

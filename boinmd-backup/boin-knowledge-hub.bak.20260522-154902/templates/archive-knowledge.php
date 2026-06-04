@@ -87,12 +87,16 @@ $trending = new WP_Query( array(
     'orderby'        => array( 'meta_value_num' => 'ASC', 'date' => 'DESC' ),
 ) );
 
+$article_page = isset( $_GET['kpage'] ) ? max( 1, (int) $_GET['kpage'] ) : 1;
+$article_per_page = 6;
 $articles = new WP_Query( array(
     'post_type'      => 'knowledge_article',
-    'posts_per_page' => 16,
+    'posts_per_page' => $article_per_page,
+    'paged'          => $article_page,
     'meta_key'       => '_bkh_featured_priority',
     'orderby'        => array( 'meta_value_num' => 'ASC', 'date' => 'DESC' ),
 ) );
+$article_total_pages = max( 1, (int) $articles->max_num_pages );
 
 wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array(), BKH_VERSION );
 ?>
@@ -163,12 +167,12 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
   <?php if ( $trending->have_posts() ) : ?>
   <section class="bkh-trending">
     <div class="bkh-wrap">
-      <h2 class="bkh-section-title">鐑棬鏂囩珷</h2>
+      <h2 class="bkh-section-title">热门文章</h2>
       <div class="bkh-trending-list">
         <?php while ( $trending->have_posts() ) : $trending->the_post(); ?>
           <a class="bkh-trending-item" href="<?php the_permalink(); ?>">
             <h3 class="bkh-trending-title"><?php the_title(); ?></h3>
-            <span class="bkh-trending-cta">鏌ョ湅瑙ｅ喅鏂规 鈫?/span>
+            <span class="bkh-trending-cta">查看解决方案 →</span>
           </a>
         <?php endwhile; wp_reset_postdata(); ?>
       </div>
@@ -177,9 +181,9 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
   <?php endif; ?>
 
   <?php if ( $articles->have_posts() ) : ?>
-  <section class="bkh-recommended">
+  <section class="bkh-recommended" id="knowledge-recommended">
     <div class="bkh-wrap">
-      <h2 class="bkh-section-title">鎺ㄨ崘闃呰</h2>
+      <h2 class="bkh-section-title">推荐阅读</h2>
       <div class="bkh-article-grid bkh-home-article-grid">
         <?php while ( $articles->have_posts() ) : $articles->the_post();
           $terms = wp_get_object_terms( get_the_ID(), 'knowledge_category' );
@@ -195,13 +199,32 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
               <p class="bkh-art-excerpt"><?php echo esc_html( wp_strip_all_tags( get_the_excerpt() ) ); ?></p>
               <div class="bkh-art-meta-row">
                 <span class="bkh-art-meta"><?php echo esc_html( get_the_date( 'Y-m-d' ) ); ?></span>
-                <span class="bkh-art-meta"><?php echo esc_html( $read_minutes ); ?> 鍒嗛挓闃呰</span>
+                <span class="bkh-art-meta"><?php echo esc_html( $read_minutes ); ?> 分钟阅读</span>
               </div>
-              <a class="bkh-art-cta" href="<?php the_permalink(); ?>">闃呰鍏ㄦ枃</a>
+              <a class="bkh-art-cta" href="<?php the_permalink(); ?>">阅读全文</a>
             </div>
           </article>
         <?php endwhile; wp_reset_postdata(); ?>
       </div>
+      <?php if ( $article_total_pages > 1 ) : ?>
+        <nav class="bkh-pagination" aria-label="推荐阅读分页">
+          <?php if ( $article_page > 1 ) :
+            $prev_url = add_query_arg( 'kpage', $article_page - 1, bkh_url( '/knowledge/' ) ) . '#knowledge-recommended';
+          ?>
+            <a class="bkh-page-btn" href="<?php echo esc_url( $prev_url ); ?>">上一页</a>
+          <?php else : ?>
+            <span class="bkh-page-btn bkh-page-btn-disabled">上一页</span>
+          <?php endif; ?>
+          <span class="bkh-page-count">第 <?php echo esc_html( $article_page ); ?> / <?php echo esc_html( $article_total_pages ); ?> 页</span>
+          <?php if ( $article_page < $article_total_pages ) :
+            $next_url = add_query_arg( 'kpage', $article_page + 1, bkh_url( '/knowledge/' ) ) . '#knowledge-recommended';
+          ?>
+            <a class="bkh-page-btn" href="<?php echo esc_url( $next_url ); ?>">下一页</a>
+          <?php else : ?>
+            <span class="bkh-page-btn bkh-page-btn-disabled">下一页</span>
+          <?php endif; ?>
+        </nav>
+      <?php endif; ?>
     </div>
   </section>
   <?php endif; ?>
