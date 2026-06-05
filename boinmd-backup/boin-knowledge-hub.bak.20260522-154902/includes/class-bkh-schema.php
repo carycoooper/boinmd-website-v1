@@ -218,12 +218,21 @@ class BKH_Schema {
     }
 
     public function item_list_jsonld() {
+        $page = 1;
         $query_args = array(
             'post_type'      => 'knowledge_article',
             'posts_per_page' => 12,
             'post_status'    => 'publish',
             'orderby'        => array( 'date' => 'DESC' ),
         );
+
+        if ( function_exists( 'bkh_is_knowledge_landing' ) && bkh_is_knowledge_landing() ) {
+            $page = isset( $_GET['kpage'] ) ? max( 1, (int) $_GET['kpage'] ) : 1;
+            $query_args['posts_per_page'] = 6;
+            $query_args['paged'] = $page;
+            $query_args['meta_key'] = '_bkh_featured_priority';
+            $query_args['orderby'] = array( 'meta_value_num' => 'ASC', 'date' => 'DESC' );
+        }
 
         if ( is_tax( 'knowledge_category' ) ) {
             $term = get_queried_object();
@@ -242,7 +251,7 @@ class BKH_Schema {
         if ( ! $q->have_posts() ) return '';
 
         $items = array();
-        $pos = 1;
+        $pos = ( ( $page - 1 ) * (int) $query_args['posts_per_page'] ) + 1;
         while ( $q->have_posts() ) {
             $q->the_post();
             $items[] = array(

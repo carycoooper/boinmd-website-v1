@@ -211,7 +211,7 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
           <?php if ( $article_page > 1 ) :
             $prev_url = add_query_arg( 'kpage', $article_page - 1, bkh_url( '/knowledge/' ) ) . '#knowledge-recommended';
           ?>
-            <a class="bkh-page-btn" href="<?php echo esc_url( $prev_url ); ?>">上一页</a>
+            <a class="bkh-page-btn" rel="prev" href="<?php echo esc_url( $prev_url ); ?>">上一页</a>
           <?php else : ?>
             <span class="bkh-page-btn bkh-page-btn-disabled">上一页</span>
           <?php endif; ?>
@@ -219,7 +219,7 @@ wp_enqueue_style( 'bkh-frontend', BKH_URL . 'assets/css/bkh-frontend.css', array
           <?php if ( $article_page < $article_total_pages ) :
             $next_url = add_query_arg( 'kpage', $article_page + 1, bkh_url( '/knowledge/' ) ) . '#knowledge-recommended';
           ?>
-            <a class="bkh-page-btn" href="<?php echo esc_url( $next_url ); ?>">下一页</a>
+            <a class="bkh-page-btn" rel="next" href="<?php echo esc_url( $next_url ); ?>">下一页</a>
           <?php else : ?>
             <span class="bkh-page-btn bkh-page-btn-disabled">下一页</span>
           <?php endif; ?>

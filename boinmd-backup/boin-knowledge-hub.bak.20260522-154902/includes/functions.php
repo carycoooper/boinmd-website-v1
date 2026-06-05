@@ -115,6 +115,32 @@ function bkh_get_faqs( $post_id ) {
 }
 
 /**
+ * Detect the public knowledge hub landing page, including ?kpage= pagination.
+ */
+function bkh_is_knowledge_landing() {
+    if ( (int) get_query_var( 'bkh_landing' ) === 1 || is_post_type_archive( 'knowledge_article' ) ) {
+        return true;
+    }
+
+    $path = isset( $_SERVER['REQUEST_URI'] ) ? (string) parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ), PHP_URL_PATH ) : '';
+    return rtrim( $path, '/' ) === '/knowledge';
+}
+
+/**
+ * Current canonical URL for the knowledge hub landing pagination.
+ */
+function bkh_get_knowledge_landing_canonical_url() {
+    $url  = bkh_url( '/knowledge/' );
+    $page = isset( $_GET['kpage'] ) ? max( 1, (int) $_GET['kpage'] ) : 1;
+
+    if ( $page > 1 ) {
+        $url = add_query_arg( 'kpage', $page, $url );
+    }
+
+    return $url;
+}
+
+/**
  * Get topic "scene cards" for a knowledge_topic.
  */
 function bkh_get_scenes( $post_id ) {
@@ -228,12 +254,34 @@ function bkh_get_product_page_url() {
  * Use a user-facing SEO title for the knowledge hub archive.
  */
 function bkh_filter_document_title_parts( $title ) {
-    if ( is_post_type_archive( 'knowledge_article' ) ) {
+    if ( bkh_is_knowledge_landing() ) {
         $title['title'] = '听力知识中心';
     }
     return $title;
 }
 add_filter( 'document_title_parts', 'bkh_filter_document_title_parts', 20 );
+
+/**
+ * Keep SEO plugin titles/canonicals aligned with the public knowledge hub URL.
+ */
+function bkh_filter_knowledge_archive_title( $title ) {
+    if ( bkh_is_knowledge_landing() ) {
+        return '听力知识中心 - 博音悦听礼赠';
+    }
+    return $title;
+}
+add_filter( 'wpseo_title', 'bkh_filter_knowledge_archive_title', 99 );
+add_filter( 'pre_get_document_title', 'bkh_filter_knowledge_archive_title', 99 );
+
+function bkh_filter_knowledge_archive_canonical( $url ) {
+    if ( bkh_is_knowledge_landing() ) {
+        return bkh_get_knowledge_landing_canonical_url();
+    }
+    return $url;
+}
+add_filter( 'wpseo_canonical', 'bkh_filter_knowledge_archive_canonical', 99 );
+add_filter( 'rank_math/frontend/canonical', 'bkh_filter_knowledge_archive_canonical', 99 );
+add_filter( 'aioseo_canonical_url', 'bkh_filter_knowledge_archive_canonical', 99 );
 
 /**
  * Get visible FAQs for an article/topic with backward-compatible field support.
