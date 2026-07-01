@@ -98,13 +98,25 @@ class BHS_REST_API {
 
         $clean_freq = array();
         foreach ( $freq as $key => $value ) {
-            $clean_freq[ sanitize_key( $key ) ] = floatval( $value );
+            $freq_key = sanitize_key( $key );
+            $raw_value = is_scalar( $value ) ? sanitize_key( (string) $value ) : '';
+            if ( in_array( $raw_value, array( 'heard', 'not_heard' ), true ) ) {
+                $clean_freq[ $freq_key ] = $raw_value;
+            } else {
+                $clean_freq[ $freq_key ] = floatval( $value );
+            }
         }
 
         $summary = sanitize_textarea_field( (string) $request->get_param( 'summary' ) );
         if ( $summary === '' ) {
-            $avg = count( $clean_freq ) ? round( array_sum( $clean_freq ) / count( $clean_freq ), 1 ) : 0;
-            $summary = '平均听阈约 ' . $avg . ' dB，仅作初步参考。';
+            $not_heard = count( array_filter( $clean_freq, function( $value ) { return $value === 'not_heard'; } ) );
+            if ( $not_heard > 0 ) {
+                $summary = '6 频测试中有 ' . $not_heard . ' 个频率反馈为听不到，仅作服务沟通参考。';
+            } else {
+                $numeric = array_filter( $clean_freq, 'is_numeric' );
+                $avg = count( $numeric ) ? round( array_sum( $numeric ) / count( $numeric ), 1 ) : 0;
+                $summary = $avg > 0 ? '平均听阈约 ' . $avg . ' dB，仅作初步参考。' : '6 频听力测试已完成，结果仅作服务沟通参考。';
+            }
         }
 
         $post_id = wp_insert_post( array(

@@ -1,4 +1,4 @@
-﻿(function(){
+(function(){
   function setMessage(form, text, ok){
     var msg = form.querySelector('.bhs-form-msg');
     if(!msg) return;
@@ -52,7 +52,9 @@
     try{
       var data = await postJSON(type, payload);
       setMessage(form, '提交成功，我们已收到。记录 ID：' + data.id, true);
-      form.reset();
+      if(!form.hasAttribute('data-bhs-auto-submit')){
+        form.reset();
+      }
       if(type === 'request'){
         window.location.href = '/hearing-service/?bhs_step=success';
       }
@@ -60,5 +62,12 @@
       setMessage(form, err.message, false);
     }
   });
-})();
 
+  document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('[data-bhs-auto-submit="1"]').forEach(function(form){
+      if(form.getAttribute('data-bhs-submitted') === '1') return;
+      form.setAttribute('data-bhs-submitted', '1');
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+  });
+})();

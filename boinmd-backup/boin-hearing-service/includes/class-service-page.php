@@ -109,10 +109,15 @@ class BHS_Service_Page {
         echo '<section class="bhs-card bhs-flow-card">';
         echo '<h2>开始前请确认</h2>';
         echo '<ul class="bhs-check-list"><li>请在安静环境中测试</li><li>建议佩戴耳机或使用稳定音量</li><li>测试结果仅作服务沟通参考，不替代专业诊断</li></ul>';
+        echo '<form class="bhs-form bhs-start-form" method="get" action="' . esc_url( bhs_public_url( '/hearing-service/' ) ) . '">';
+        echo '<input type="hidden" name="bhs_step" value="test-run">';
+        echo '<input type="hidden" name="freq" value="250">';
+        echo '<label>手机号<input type="tel" name="user_phone" required placeholder="请输入手机号，便于验配师联系"></label>';
         echo '<div class="bhs-actions">';
-        echo '<a class="bhs-btn bhs-btn-primary" href="' . esc_url( $this->url( 'test-run', array( 'freq' => '250' ) ) ) . '">开始测试</a>';
+        echo '<button class="bhs-btn bhs-btn-primary" type="submit">开始测试</button>';
         echo '<a class="bhs-btn bhs-btn-ghost" href="' . esc_url( $this->url( 'home' ) ) . '">返回</a>';
         echo '</div>';
+        echo '</form>';
         echo '</section>';
     }
 
@@ -121,8 +126,20 @@ class BHS_Service_Page {
         if ( ! in_array( $freq, $this->freqs, true ) ) $freq = '250';
         $index = array_search( $freq, $this->freqs, true );
         $next = $this->freqs[ $index + 1 ] ?? '';
-        $heard_url = $next ? $this->url( 'test-run', array( 'freq' => $next ) ) : $this->url( 'test-result' );
-        $not_url = add_query_arg( 'missed', $freq, $heard_url );
+        $phone = bhs_sanitize_phone( wp_unslash( $_GET['user_phone'] ?? '' ) );
+
+        $base_args = array( 'user_phone' => $phone );
+        foreach ( $this->freqs as $past_freq ) {
+            $key = 'freq_' . $past_freq;
+            if ( isset( $_GET[ $key ] ) ) {
+                $base_args[ $key ] = sanitize_key( wp_unslash( $_GET[ $key ] ) );
+            }
+        }
+
+        $heard_args = array_merge( $base_args, array( 'freq_' . $freq => 'heard' ) );
+        $not_args = array_merge( $base_args, array( 'freq_' . $freq => 'not_heard' ) );
+        $heard_url = $next ? $this->url( 'test-run', array_merge( $heard_args, array( 'freq' => $next ) ) ) : $this->url( 'test-result', $heard_args );
+        $not_url = $next ? $this->url( 'test-run', array_merge( $not_args, array( 'freq' => $next ) ) ) : $this->url( 'test-result', $not_args );
 
         echo '<section class="bhs-card bhs-flow-card bhs-test-step">';
         echo '<p class="bhs-step-count">第 ' . esc_html( $index + 1 ) . ' / 6 步</p>';
@@ -137,10 +154,31 @@ class BHS_Service_Page {
     }
 
     private function render_test_result() {
+        $phone = bhs_sanitize_phone( wp_unslash( $_GET['user_phone'] ?? '' ) );
+        $missing = array();
+        foreach ( $this->freqs as $freq ) {
+            $value = sanitize_key( wp_unslash( $_GET[ 'freq_' . $freq ] ?? '' ) );
+            if ( ! in_array( $value, array( 'heard', 'not_heard' ), true ) ) {
+                $missing[] = $freq;
+            }
+        }
+
         echo '<section class="bhs-card bhs-flow-card">';
         echo '<h2>测试完成</h2>';
         echo '<p>你已经完成听力测试，验配师会结合测试记录查看，尽快与您取得联系。</p>';
         echo '<div class="bhs-result-grid"><div><strong>测试频率</strong><span>250 / 500 / 1000 / 2000 / 4000 / 8000 Hz</span></div><div><strong>建议</strong><span>如有听不清、耳鸣或佩戴不适，建议提交调试需求。</span></div></div>';
+        if ( $phone !== '' && empty( $missing ) ) {
+            echo '<form class="bhs-form bhs-auto-test-form" data-bhs-form="test" data-bhs-auto-submit="1">';
+            echo '<input type="hidden" name="user_phone" value="' . esc_attr( $phone ) . '">';
+            echo '<input type="hidden" name="summary" value="6 频听力测试已完成，结果仅作服务沟通参考。">';
+            foreach ( $this->freqs as $freq ) {
+                echo '<input type="hidden" name="freq_' . esc_attr( $freq ) . '" value="' . esc_attr( sanitize_key( wp_unslash( $_GET[ 'freq_' . $freq ] ?? '' ) ) ) . '">';
+            }
+            echo '<p class="bhs-form-msg" aria-live="polite">正在保存测试记录...</p>';
+            echo '</form>';
+        } else {
+            echo '<p class="bhs-form-msg is-error">测试信息不完整，请返回重新开始测试。</p>';
+        }
         echo '<div class="bhs-actions">';
         echo '<a class="bhs-btn bhs-btn-primary" href="' . esc_url( $this->url( 'request', array( 'from' => 'test' ) ) ) . '">提交调试需求</a>';
         echo '<a class="bhs-btn bhs-btn-ghost" href="' . esc_url( $this->url( 'home' ) ) . '">返回首页</a>';
