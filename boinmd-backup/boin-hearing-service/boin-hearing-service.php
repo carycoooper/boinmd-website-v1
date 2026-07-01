@@ -1,0 +1,56 @@
+<?php
+/**
+ * Plugin Name: Boin Hearing Service
+ * Plugin URI:  https://www.boinmd.com.cn/
+ * Description: 博音悦听礼赠款远程服务系统：设备型号、用户需求、听力测试、企业微信通知与前端短代码。
+ * Version:     0.1.0
+ * Author:      博音 BOINMD
+ * Text Domain: boin-hearing-service
+ * Requires PHP: 7.4
+ */
+
+if ( ! defined( 'ABSPATH' ) ) exit;
+
+define( 'BHS_VERSION', '0.1.0' );
+define( 'BHS_FILE', __FILE__ );
+define( 'BHS_DIR', plugin_dir_path( __FILE__ ) );
+define( 'BHS_URL', plugin_dir_url( __FILE__ ) );
+define( 'BHS_OPT_SETTINGS', 'boin_hearing_service_settings' );
+
+require_once BHS_DIR . 'includes/functions.php';
+require_once BHS_DIR . 'includes/class-wecom.php';
+require_once BHS_DIR . 'includes/class-sms.php';
+require_once BHS_DIR . 'includes/class-device-cpt.php';
+require_once BHS_DIR . 'includes/class-request-cpt.php';
+require_once BHS_DIR . 'includes/class-test-cpt.php';
+require_once BHS_DIR . 'includes/class-rest-api.php';
+require_once BHS_DIR . 'admin/admin-settings.php';
+require_once BHS_DIR . 'frontend/shortcode-home.php';
+require_once BHS_DIR . 'frontend/shortcode-test.php';
+require_once BHS_DIR . 'frontend/shortcode-request.php';
+
+add_action( 'plugins_loaded', function() {
+    BHS_Device_CPT::instance();
+    BHS_Request_CPT::instance();
+    BHS_Test_CPT::instance();
+    BHS_REST_API::instance();
+    BHS_Admin_Settings::instance();
+    BHS_Shortcode_Home::instance();
+    BHS_Shortcode_Test::instance();
+    BHS_Shortcode_Request::instance();
+} );
+
+register_activation_hook( __FILE__, 'bhs_activate' );
+function bhs_activate() {
+    BHS_Device_CPT::instance()->register();
+    BHS_Request_CPT::instance()->register();
+    BHS_Test_CPT::instance()->register();
+
+    bhs_seed_default_device();
+    flush_rewrite_rules();
+}
+
+register_deactivation_hook( __FILE__, 'bhs_deactivate' );
+function bhs_deactivate() {
+    flush_rewrite_rules();
+}

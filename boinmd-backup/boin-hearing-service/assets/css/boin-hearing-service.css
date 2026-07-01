@@ -1,0 +1,18 @@
+﻿.bhs-card{max-width:880px;margin:32px auto;padding:32px;border:1px solid #e9e3f2;border-radius:24px;background:#fff;box-shadow:0 18px 45px -32px rgba(38,26,61,.28);color:#262238}
+.bhs-card h2{margin:0 0 12px;font-size:28px;line-height:1.35;color:#201a2f}
+.bhs-card p{font-size:16px;line-height:1.8;color:#686078}
+.bhs-eyebrow{margin:0 0 10px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#6b3fa0}
+.bhs-actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:22px}
+.bhs-btn{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:999px;padding:12px 22px;font-size:15px;font-weight:600;text-decoration:none;cursor:pointer;transition:.2s ease}
+.bhs-btn-primary{background:#251d35;color:#fff}
+.bhs-btn-ghost{background:#f7f3fb;color:#4b2b7f}
+.bhs-btn:hover{transform:translateY(-1px);box-shadow:0 14px 30px -22px rgba(37,29,53,.5)}
+.bhs-form{display:grid;gap:18px;margin-top:20px}
+.bhs-form label{display:grid;gap:8px;font-size:14px;color:#3d354f}
+.bhs-form input,.bhs-form select,.bhs-form textarea{width:100%;box-sizing:border-box;border:1px solid #ddd4ea;border-radius:14px;padding:12px 14px;font-size:15px;background:#fff;color:#262238}
+.bhs-form input:focus,.bhs-form select:focus,.bhs-form textarea:focus{outline:2px solid rgba(107,63,160,.18);border-color:#6b3fa0}
+.bhs-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.bhs-form-msg{margin:0;font-size:14px}
+.bhs-form-msg.is-ok{color:#147a43}
+.bhs-form-msg.is-error{color:#b3261e}
+@media(max-width:680px){.bhs-card{margin:22px 14px;padding:24px 18px;border-radius:20px}.bhs-card h2{font-size:24px}.bhs-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.bhs-actions{display:grid}.bhs-btn{width:100%}}
