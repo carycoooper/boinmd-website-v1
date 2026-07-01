@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 class BHS_Service_Page {
@@ -139,7 +139,7 @@ class BHS_Service_Page {
     private function render_test_result() {
         echo '<section class="bhs-card bhs-flow-card">';
         echo '<h2>测试完成</h2>';
-        echo '<p>你已经完成 6 个频率的测试。下一步可以把设备调试需求一起提交，后台验配师会结合测试记录查看。</p>';
+        echo '<p>你已经完成听力测试，验配师会结合测试记录查看，尽快与您取得联系。</p>';
         echo '<div class="bhs-result-grid"><div><strong>测试频率</strong><span>250 / 500 / 1000 / 2000 / 4000 / 8000 Hz</span></div><div><strong>建议</strong><span>如有听不清、耳鸣或佩戴不适，建议提交调试需求。</span></div></div>';
         echo '<div class="bhs-actions">';
         echo '<a class="bhs-btn bhs-btn-primary" href="' . esc_url( $this->url( 'request', array( 'from' => 'test' ) ) ) . '">提交调试需求</a>';
@@ -160,5 +160,3 @@ class BHS_Service_Page {
         echo '</section>';
     }
 }
-
-
