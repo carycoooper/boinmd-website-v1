@@ -3,6 +3,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 class BHS_Service_Page {
     private static $instance = null;
+    private $freqs = array( '250', '500', '1000', '2000', '4000', '8000' );
 
     public static function instance() {
         if ( self::$instance === null ) self::$instance = new self();
@@ -24,11 +25,23 @@ class BHS_Service_Page {
 
     public function query_vars( $vars ) {
         $vars[] = 'bhs_service_page';
+        $vars[] = 'bhs_step';
         return $vars;
     }
 
     public function is_service_page() {
         return (int) get_query_var( 'bhs_service_page' ) === 1;
+    }
+
+    private function step() {
+        $step = sanitize_key( get_query_var( 'bhs_step' ) ?: ( $_GET['bhs_step'] ?? 'home' ) );
+        $allowed = array( 'home', 'test-start', 'test-run', 'test-result', 'request', 'success' );
+        return in_array( $step, $allowed, true ) ? $step : 'home';
+    }
+
+    private function url( $step = 'home', $args = array() ) {
+        $args = array_merge( array( 'bhs_step' => $step ), $args );
+        return add_query_arg( $args, home_url( '/hearing-service/' ) );
     }
 
     public function title_parts( $title ) {
@@ -57,19 +70,93 @@ class BHS_Service_Page {
     public function render_page() {
         if ( ! $this->is_service_page() ) return;
 
+        bhs_enqueue_frontend_assets();
         status_header( 200 );
         get_header();
         echo '<main class="bhs-service-page" aria-label="测听服务">';
-        echo '<section class="bhs-service-hero"><div class="bhs-service-wrap">';
-        echo '<p class="bhs-eyebrow">BOINMD Hearing Service</p>';
-        echo '<h1>测听服务</h1>';
-        echo '<p>在线记录 6 频听力测试结果，或提交悦听礼赠款助听器调试需求。后台验配师可查看记录并接收企业微信通知。</p>';
-        echo '</div></section>';
-        echo do_shortcode( '[boin_home]' );
-        echo do_shortcode( '[boin_test]' );
-        echo do_shortcode( '[boin_request]' );
+        $this->render_header();
+        $method = 'render_' . str_replace( '-', '_', $this->step() );
+        if ( method_exists( $this, $method ) ) {
+            $this->$method();
+        } else {
+            $this->render_home();
+        }
         echo '</main>';
         get_footer();
         exit;
+    }
+
+    private function render_header() {
+        echo '<section class="bhs-service-hero"><div class="bhs-service-wrap">';
+        echo '<p class="bhs-eyebrow">BOINMD Hearing Service</p>';
+        echo '<h1>测听服务</h1>';
+        echo '<p>按步骤完成听力测试，或单独提交悦听礼赠款助听器调试需求。每一步都会更清楚，也更适合手机端使用。</p>';
+        echo '</div></section>';
+    }
+
+    private function render_home() {
+        echo '<section class="bhs-card bhs-flow-card">';
+        echo '<h2>你想先做什么？</h2>';
+        echo '<p>建议先做 6 频听力测试，再根据结果提交调试需求。如果已经明确问题，也可以直接提交需求。</p>';
+        echo '<div class="bhs-actions">';
+        echo '<a class="bhs-btn bhs-btn-primary" href="' . esc_url( $this->url( 'test-start' ) ) . '">开始听力测试</a>';
+        echo '<a class="bhs-btn bhs-btn-ghost" href="' . esc_url( $this->url( 'request' ) ) . '">提交调试需求</a>';
+        echo '</div>';
+        echo '</section>';
+    }
+
+    private function render_test_start() {
+        echo '<section class="bhs-card bhs-flow-card">';
+        echo '<h2>开始前请确认</h2>';
+        echo '<ul class="bhs-check-list"><li>请在安静环境中测试</li><li>建议佩戴耳机或使用稳定音量</li><li>测试结果仅作服务沟通参考，不替代专业诊断</li></ul>';
+        echo '<div class="bhs-actions">';
+        echo '<a class="bhs-btn bhs-btn-primary" href="' . esc_url( $this->url( 'test-run', array( 'freq' => '250' ) ) ) . '">开始测试</a>';
+        echo '<a class="bhs-btn bhs-btn-ghost" href="' . esc_url( $this->url( 'home' ) ) . '">返回</a>';
+        echo '</div>';
+        echo '</section>';
+    }
+
+    private function render_test_run() {
+        $freq = sanitize_text_field( wp_unslash( $_GET['freq'] ?? '250' ) );
+        if ( ! in_array( $freq, $this->freqs, true ) ) $freq = '250';
+        $index = array_search( $freq, $this->freqs, true );
+        $next = $this->freqs[ $index + 1 ] ?? '';
+        $heard_url = $next ? $this->url( 'test-run', array( 'freq' => $next ) ) : $this->url( 'test-result' );
+        $not_url = add_query_arg( 'missed', $freq, $heard_url );
+
+        echo '<section class="bhs-card bhs-flow-card bhs-test-step">';
+        echo '<p class="bhs-step-count">第 ' . esc_html( $index + 1 ) . ' / 6 步</p>';
+        echo '<h2>' . esc_html( $freq ) . ' Hz 是否能听到？</h2>';
+        echo '<p>请播放当前频率声音。如果能听到，点击“听到了”；如果听不到，点击“听不到”。系统会自动进入下一频率。</p>';
+        echo '<div class="bhs-tone-box"><span>' . esc_html( $freq ) . ' Hz</span><small>频率提示</small></div>';
+        echo '<div class="bhs-actions">';
+        echo '<a class="bhs-btn bhs-btn-primary" href="' . esc_url( $heard_url ) . '">听到了，下一步</a>';
+        echo '<a class="bhs-btn bhs-btn-ghost" href="' . esc_url( $not_url ) . '">听不到，下一步</a>';
+        echo '</div>';
+        echo '</section>';
+    }
+
+    private function render_test_result() {
+        echo '<section class="bhs-card bhs-flow-card">';
+        echo '<h2>测试完成</h2>';
+        echo '<p>你已经完成 6 个频率的测试。下一步可以把设备调试需求一起提交，后台验配师会结合测试记录查看。</p>';
+        echo '<div class="bhs-result-grid"><div><strong>测试频率</strong><span>250 / 500 / 1000 / 2000 / 4000 / 8000 Hz</span></div><div><strong>建议</strong><span>如有听不清、耳鸣或佩戴不适，建议提交调试需求。</span></div></div>';
+        echo '<div class="bhs-actions">';
+        echo '<a class="bhs-btn bhs-btn-primary" href="' . esc_url( $this->url( 'request', array( 'from' => 'test' ) ) ) . '">提交调试需求</a>';
+        echo '<a class="bhs-btn bhs-btn-ghost" href="' . esc_url( $this->url( 'home' ) ) . '">返回首页</a>';
+        echo '</div>';
+        echo '</section>';
+    }
+
+    private function render_request() {
+        echo do_shortcode( '[boin_request]' );
+    }
+
+    private function render_success() {
+        echo '<section class="bhs-card bhs-flow-card">';
+        echo '<h2>提交成功</h2>';
+        echo '<p>我们已经收到你的信息。后台验配师会查看需求，并通过企业微信通知及时处理。</p>';
+        echo '<div class="bhs-actions"><a class="bhs-btn bhs-btn-primary" href="' . esc_url( $this->url( 'home' ) ) . '">返回测听服务首页</a></div>';
+        echo '</section>';
     }
 }

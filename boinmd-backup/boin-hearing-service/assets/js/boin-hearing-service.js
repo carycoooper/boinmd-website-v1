@@ -53,8 +53,12 @@
       var data = await postJSON(type, payload);
       setMessage(form, '提交成功，我们已收到。记录 ID：' + data.id, true);
       form.reset();
+      if(type === 'request'){
+        window.location.href = '/hearing-service/?bhs_step=success';
+      }
     }catch(err){
       setMessage(form, err.message, false);
     }
   });
 })();
+
