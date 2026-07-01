@@ -86,3 +86,9 @@ function bhs_enqueue_frontend_assets() {
         'nonce'   => wp_create_nonce( 'wp_rest' ),
     ) );
 }
+
+function bhs_public_url( $path = '/' ) {
+    $base = home_url( '/' );
+    $base = preg_replace( '#/blog/?$#', '/', $base );
+    return trailingslashit( $base ) . ltrim( $path, '/' );
+}

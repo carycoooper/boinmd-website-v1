@@ -41,7 +41,7 @@ class BHS_Service_Page {
 
     private function url( $step = 'home', $args = array() ) {
         $args = array_merge( array( 'bhs_step' => $step ), $args );
-        return add_query_arg( $args, home_url( '/hearing-service/' ) );
+        return add_query_arg( $args, bhs_public_url( '/hearing-service/' ) );
     }
 
     public function title_parts( $title ) {
@@ -160,3 +160,5 @@ class BHS_Service_Page {
         echo '</section>';
     }
 }
+
+
