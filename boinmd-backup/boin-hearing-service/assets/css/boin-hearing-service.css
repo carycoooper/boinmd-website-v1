@@ -16,3 +16,10 @@
 .bhs-form-msg.is-ok{color:#147a43}
 .bhs-form-msg.is-error{color:#b3261e}
 @media(max-width:680px){.bhs-card{margin:22px 14px;padding:24px 18px;border-radius:20px}.bhs-card h2{font-size:24px}.bhs-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.bhs-actions{display:grid}.bhs-btn{width:100%}}
+
+.bhs-service-page{background:linear-gradient(180deg,#fbf8ff 0%,#fff 34%);padding-bottom:44px}
+.bhs-service-hero{padding:72px 18px 28px;border-bottom:1px solid #eee7f5}
+.bhs-service-wrap{max-width:880px;margin:0 auto}
+.bhs-service-hero h1{margin:0 0 14px;font-size:44px;line-height:1.18;color:#201a2f;font-weight:500}
+.bhs-service-hero p{max-width:720px;font-size:17px;line-height:1.9;color:#686078}
+@media(max-width:680px){.bhs-service-hero{padding:48px 16px 18px}.bhs-service-hero h1{font-size:34px}.bhs-service-hero p{font-size:16px}}
