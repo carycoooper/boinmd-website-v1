@@ -12,6 +12,23 @@
     el.classList.toggle('is-error', !ok && !!text);
   }
 
+  function logAudioError(stage, err, audio, url){
+    if(!window.console || !console.error) return;
+    var mediaError = audio && audio.error ? {
+      code: audio.error.code,
+      message: audio.error.message || ''
+    } : null;
+    console.error('[BHS audio]', stage, {
+      url: url,
+      errorName: err && err.name,
+      errorMessage: err && err.message,
+      mediaError: mediaError,
+      networkState: audio && audio.networkState,
+      readyState: audio && audio.readyState,
+      currentSrc: audio && audio.currentSrc
+    });
+  }
+
   async function post(endpoint, payload){
     var res = await fetch(BHS_DATA.restUrl + endpoint, {
       method: 'POST',
@@ -53,48 +70,86 @@
     try{
       activeAudio.pause();
       activeAudio.removeAttribute('src');
+      while(activeAudio.firstChild) activeAudio.removeChild(activeAudio.firstChild);
       activeAudio.load();
     }catch(e){}
     activeAudio = null;
+  }
+
+  function makeAudio(url){
+    var audio = document.createElement('audio');
+    var source = document.createElement('source');
+    source.src = url;
+    source.type = 'audio/wav';
+    audio.appendChild(source);
+    audio.preload = 'auto';
+    audio.playsInline = true;
+    audio.volume = 1;
+    audio.muted = false;
+    return audio;
   }
 
   async function playAudioFile(url){
     if(!url) throw new Error('声音文件未找到，请稍后重试。');
     stopActiveAudio();
 
-    var audio = new Audio(url);
+    var audio = makeAudio(url);
     activeAudio = audio;
-    audio.preload = 'auto';
 
     await withTimeout(new Promise(function(resolve, reject){
       var settled = false;
       function cleanup(){
         audio.removeEventListener('ended', onEnded);
         audio.removeEventListener('error', onError);
+        audio.removeEventListener('stalled', onStalled);
+        audio.removeEventListener('abort', onAbort);
       }
-      function finish(err){
+      function finish(err, stage){
         if(settled) return;
         settled = true;
         cleanup();
         if(activeAudio === audio) activeAudio = null;
-        if(err) reject(err); else resolve();
+        if(err){
+          logAudioError(stage || 'finish', err, audio, url);
+          reject(err);
+        }else{
+          resolve();
+        }
       }
       function onEnded(){ finish(); }
-      function onError(){ finish(new Error('声音播放失败，请检查浏览器音量或稍后重试。')); }
+      function onError(){ finish(new Error('声音播放失败，请检查浏览器音量或稍后重试。'), 'media-error'); }
+      function onStalled(){ logAudioError('stalled', new Error('audio stalled'), audio, url); }
+      function onAbort(){ logAudioError('abort', new Error('audio aborted'), audio, url); }
 
       audio.addEventListener('ended', onEnded);
       audio.addEventListener('error', onError);
-      var playPromise = audio.play();
+      audio.addEventListener('stalled', onStalled);
+      audio.addEventListener('abort', onAbort);
+      audio.load();
+
+      var playPromise;
+      try{
+        playPromise = audio.play();
+      }catch(err){
+        finish(err, 'play-throw');
+        return;
+      }
+
       if(playPromise && typeof playPromise.catch === 'function'){
-        playPromise.catch(function(){
-          finish(new Error('声音播放失败，请检查浏览器音量或稍后重试。'));
+        playPromise.catch(function(err){
+          finish(err || new Error('声音播放失败，请检查浏览器音量或稍后重试。'), 'play-reject');
         });
       }
-    }), 5000, function(){ stopActiveAudio(); });
+    }), 6000, function(){ stopActiveAudio(); });
   }
 
   function setButtonsDisabled(root, selector, disabled){
     qsa(selector, root).forEach(function(btn){ btn.disabled = disabled; });
+  }
+
+  function revealCalibrationOptions(card){
+    var options = qs('.bhs-calibration-options', card);
+    if(options) options.hidden = false;
   }
 
   document.addEventListener('visibilitychange', function(){
@@ -124,11 +179,11 @@
         playRef.disabled = true;
         msg(card, '正在播放参考声音...', true);
         await playAudioFile(audioUrl('reference'));
-        var options = qs('.bhs-calibration-options', card);
-        if(options) options.hidden = false;
+        revealCalibrationOptions(card);
         msg(card, '播放完成，请选择当前音量感受。', true);
       }catch(err){
-        msg(card, err.message, false);
+        revealCalibrationOptions(card);
+        msg(card, err.message + ' 如果您已确认设备音量正常，也可以选择“音量合适”继续。', false);
       }finally{
         playRef.disabled = false;
       }
