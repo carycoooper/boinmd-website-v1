@@ -38,10 +38,14 @@ class BHS_Device_CPT {
     public function render_meta_box( $post ) {
         wp_nonce_field( 'bhs_save_device', 'bhs_device_nonce' );
         $model_code = get_post_meta( $post->ID, 'model_code', true );
+        $series     = get_post_meta( $post->ID, 'product_series', true );
+        $note       = get_post_meta( $post->ID, 'device_note', true );
         $is_active  = get_post_meta( $post->ID, 'is_active', true );
         $sort       = get_post_meta( $post->ID, 'sort', true );
         ?>
         <p><label>型号编码<br><input type="text" name="model_code" value="<?php echo esc_attr( $model_code ); ?>" class="widefat" placeholder="q10-p"></label></p>
+        <p><label>产品系列<br><input type="text" name="product_series" value="<?php echo esc_attr( $series ); ?>" class="widefat" placeholder="悦听礼赠款"></label></p>
+        <p><label>设备备注<br><textarea name="device_note" rows="3" class="widefat"><?php echo esc_textarea( $note ); ?></textarea></label></p>
         <p><label><input type="checkbox" name="is_active" value="1" <?php checked( $is_active, '1' ); ?>> 前端启用</label></p>
         <p><label>排序<br><input type="number" name="sort" value="<?php echo esc_attr( $sort !== '' ? $sort : 10 ); ?>" class="small-text"></label></p>
         <?php
@@ -53,6 +57,8 @@ class BHS_Device_CPT {
         if ( ! current_user_can( 'edit_post', $post_id ) ) return;
 
         update_post_meta( $post_id, 'model_code', sanitize_text_field( wp_unslash( $_POST['model_code'] ?? '' ) ) );
+        update_post_meta( $post_id, 'product_series', sanitize_text_field( wp_unslash( $_POST['product_series'] ?? '' ) ) );
+        update_post_meta( $post_id, 'device_note', sanitize_textarea_field( wp_unslash( $_POST['device_note'] ?? '' ) ) );
         update_post_meta( $post_id, 'is_active', isset( $_POST['is_active'] ) ? '1' : '0' );
         update_post_meta( $post_id, 'sort', (string) intval( $_POST['sort'] ?? 10 ) );
     }

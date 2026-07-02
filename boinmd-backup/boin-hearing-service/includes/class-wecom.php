@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 class BHS_WeCom {
@@ -13,7 +13,7 @@ class BHS_WeCom {
             return new WP_Error( 'wecom_missing_webhook', '企业微信 Webhook 未配置。' );
         }
 
-        return wp_remote_post( $webhook, array(
+        $response = wp_remote_post( $webhook, array(
             'headers' => array( 'Content-Type' => 'application/json; charset=utf-8' ),
             'timeout' => 8,
             'body'    => wp_json_encode( array(
@@ -21,6 +21,27 @@ class BHS_WeCom {
                 'text'    => array( 'content' => $content ),
             ), JSON_UNESCAPED_UNICODE ),
         ) );
+
+        if ( is_wp_error( $response ) ) {
+            BHS_Logger::log( 'wecom', 'send failed', array( 'error' => $response->get_error_message() ), 'error' );
+        }
+        return $response;
+    }
+
+    public static function send_service_request( $request_id ) {
+        global $wpdb;
+        $row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . BHS_DB::requests_table() . ' WHERE id = %d', $request_id ) );
+        if ( ! $row ) return new WP_Error( 'request_not_found', '需求记录不存在。' );
+        $content = "【新的远程调试需求】\n\n"
+            . "需求编号：RQ" . str_pad( (string) $row->id, 8, '0', STR_PAD_LEFT ) . "\n"
+            . "设备：" . $row->device_name_snapshot . "\n"
+            . "手机号：" . bhs_mask_phone( $row->phone ) . "\n"
+            . "主要问题：" . $row->main_problem . "\n"
+            . "使用场景：" . ( $row->usage_scene ?: '未填写' ) . "\n"
+            . "关联听力筛查：" . ( $row->hearing_session_id ? '已关联' : '未关联' ) . "\n"
+            . "提交时间：" . $row->created_at . "\n\n"
+            . "请登录 WordPress 后台及时查看和处理。";
+        return self::send( $content );
     }
 
     public static function request_message( $post_id ) {
