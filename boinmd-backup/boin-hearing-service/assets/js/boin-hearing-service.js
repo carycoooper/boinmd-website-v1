@@ -140,7 +140,7 @@
           finish(err || new Error('声音播放失败，请检查浏览器音量或稍后重试。'), 'play-reject');
         });
       }
-    }), 6000, function(){ stopActiveAudio(); });
+    }), 25000, function(){ stopActiveAudio(); });
   }
 
   function setButtonsDisabled(root, selector, disabled){
@@ -157,6 +157,23 @@
   });
 
   window.addEventListener('pagehide', stopActiveAudio);
+  function scrollToTestCard(){
+    var testCard = qs('[data-bhs-page="test"]');
+    if(!testCard) return;
+    setTimeout(function(){
+      try{
+        testCard.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }catch(e){
+        window.scrollTo(0, Math.max(0, testCard.getBoundingClientRect().top + window.pageYOffset - 16));
+      }
+    }, 120);
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', scrollToTestCard);
+  }else{
+    scrollToTestCard();
+  }
 
   document.addEventListener('change', function(e){
     if(e.target.matches('[data-bhs-intro-consent]')){
@@ -234,12 +251,18 @@
     var play = e.target.closest('[data-bhs-play-tone], [data-bhs-replay-tone]');
     if(play){
       var test = play.closest('[data-bhs-page="test"]');
+      var unlockTimer = null;
       try{
         setButtonsDisabled(test, '[data-bhs-answer]', true);
         play.disabled = true;
-        msg(test, '正在播放声音...', true);
+        msg(test, '正在播放声音，听到后即可作答。', true);
+        unlockTimer = setTimeout(function(){
+          setButtonsDisabled(test, '[data-bhs-answer]', false);
+          var replayEarly = qs('[data-bhs-replay-tone]', test);
+          if(replayEarly) replayEarly.disabled = false;
+        }, 1000);
         await playAudioFile(audioUrl(test.dataset.ear, test.dataset.frequency, test.dataset.level));
-        msg(test, '播放完成，请选择是否听到。', true);
+        msg(test, '播放完成。如果刚才听到了，请选择“听到了”；如果没听到，请选择“没听到”。', true);
         setButtonsDisabled(test, '[data-bhs-answer]', false);
         var replay = qs('[data-bhs-replay-tone]', test);
         if(replay) replay.disabled = false;
@@ -249,6 +272,7 @@
         var retry = qs('[data-bhs-replay-tone]', test) || qs('[data-bhs-play-tone]', test);
         if(retry) retry.disabled = false;
       }finally{
+        if(unlockTimer) clearTimeout(unlockTimer);
         play.disabled = false;
       }
     }
