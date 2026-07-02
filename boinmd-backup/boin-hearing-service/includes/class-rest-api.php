@@ -225,7 +225,7 @@ class BHS_REST_API {
             update_post_meta( $post_id, 'session_uuid', $session->session_uuid );
             update_post_meta( $post_id, 'user_phone', $session->phone );
             update_post_meta( $post_id, 'freq_result', wp_json_encode( $rows, JSON_UNESCAPED_UNICODE ) );
-            update_post_meta( $post_id, 'summary', '六频在线听力筛查已完成，仅作远程服务沟通参考。' );
+            update_post_meta( $post_id, 'summary', bhs_generate_hearing_test_summary( $rows ) );
             update_post_meta( $post_id, 'created_at', $session->created_at );
         }
     }

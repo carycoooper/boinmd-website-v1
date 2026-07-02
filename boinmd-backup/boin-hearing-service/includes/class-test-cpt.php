@@ -39,6 +39,9 @@ class BHS_Test_CPT {
         $phone      = get_post_meta( $post->ID, 'user_phone', true );
         $freq_json  = get_post_meta( $post->ID, 'freq_result', true );
         $summary    = get_post_meta( $post->ID, 'summary', true );
+        if ( ( ! $summary || trim( $summary ) === '六频在线听力筛查已完成，仅作远程服务沟通参考。' ) && function_exists( 'bhs_generate_hearing_test_summary' ) ) {
+            $summary = bhs_generate_hearing_test_summary( $freq_json );
+        }
         $created_at = get_post_meta( $post->ID, 'created_at', true );
         ?>
         <p><label>手机号<br><input type="text" name="user_phone" value="<?php echo esc_attr( $phone ); ?>" class="regular-text"></label></p>

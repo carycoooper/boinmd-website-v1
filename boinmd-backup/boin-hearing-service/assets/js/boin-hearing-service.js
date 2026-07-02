@@ -152,6 +152,25 @@
     if(options) options.hidden = false;
   }
 
+
+  function phoneDigits(value){
+    return String(value || '').replace(/\D+/g, '');
+  }
+
+  function isPhoneReady(card){
+    var input = qs('[data-bhs-phone]', card);
+    return !!(input && phoneDigits(input.value).length >= 7);
+  }
+
+  function updateReferenceButton(card){
+    if(!card) return;
+    var btn = qs('[data-bhs-play-reference]', card);
+    if(!btn) return;
+    var ready = isPhoneReady(card);
+    btn.disabled = !ready;
+    btn.classList.toggle('is-disabled', !ready);
+  }
+
   document.addEventListener('visibilitychange', function(){
     if(document.hidden) stopActiveAudio();
   });
@@ -182,6 +201,24 @@
     }
   });
 
+
+  document.addEventListener('input', function(e){
+    if(e.target.matches('[data-bhs-phone]')){
+      var card = e.target.closest('[data-bhs-page]');
+      updateReferenceButton(card);
+    }
+  });
+
+  function initCalibrationCards(){
+    qsa('[data-bhs-page="calibration"]').forEach(updateReferenceButton);
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initCalibrationCards);
+  }else{
+    initCalibrationCards();
+  }
+
   document.addEventListener('click', async function(e){
     var introNext = e.target.closest('[data-bhs-intro-next]');
     if(introNext && introNext.classList.contains('is-disabled')){
@@ -192,9 +229,20 @@
     var playRef = e.target.closest('[data-bhs-play-reference]');
     if(playRef){
       var card = playRef.closest('[data-bhs-page]');
+      if(!isPhoneReady(card)){
+        msg(card, '请先填写手机号，便于保存本次筛查记录。', false);
+        updateReferenceButton(card);
+        return;
+      }
+      var revealTimer = null;
       try{
         playRef.disabled = true;
-        msg(card, '正在播放参考声音...', true);
+        playRef.classList.add('is-disabled');
+        msg(card, '正在播放参考声音，请留意当前音量是否清楚舒适。', true);
+        revealTimer = setTimeout(function(){
+          revealCalibrationOptions(card);
+          msg(card, '参考声音正在播放。如果已经能听清，请选择当前音量感受。', true);
+        }, 1000);
         await playAudioFile(audioUrl('reference'));
         revealCalibrationOptions(card);
         msg(card, '播放完成，请选择当前音量感受。', true);
@@ -202,7 +250,8 @@
         revealCalibrationOptions(card);
         msg(card, err.message + ' 如果您已确认设备音量正常，也可以选择“音量合适”继续。', false);
       }finally{
-        playRef.disabled = false;
+        if(revealTimer) clearTimeout(revealTimer);
+        updateReferenceButton(card);
       }
     }
 
