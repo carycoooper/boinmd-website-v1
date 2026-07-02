@@ -94,6 +94,31 @@ function bhs_service_url( $path = '/', $args = array() ) {
     return ! empty( $args ) ? add_query_arg( $args, $url ) : $url;
 }
 
+
+function bhs_get_audio_map() {
+    $freqs = array( 250, 500, 1000, 2000, 4000, 8000 );
+    $levels = array( 1, 2, 3, 4, 5, 6 );
+    $map = array(
+        'reference' => array(
+            'left' => array(
+                '3' => BHS_URL . 'assets/audio/reference-left-level-3.wav',
+            ),
+        ),
+        'left'  => array(),
+        'right' => array(),
+    );
+
+    foreach ( array( 'left', 'right' ) as $ear ) {
+        foreach ( $freqs as $freq ) {
+            $map[ $ear ][ (string) $freq ] = array();
+            foreach ( $levels as $level ) {
+                $map[ $ear ][ (string) $freq ][ (string) $level ] = BHS_URL . 'assets/audio/' . $ear . '-' . $freq . '-level-' . $level . '.wav';
+            }
+        }
+    }
+
+    return $map;
+}
 function bhs_enqueue_frontend_assets() {
     wp_enqueue_style( 'boin-hearing-service', BHS_URL . 'assets/css/boin-hearing-service.css', array(), BHS_VERSION );
     wp_enqueue_script( 'boin-hearing-service', BHS_URL . 'assets/js/boin-hearing-service.js', array(), BHS_VERSION, true );
@@ -102,6 +127,7 @@ function bhs_enqueue_frontend_assets() {
         'legacyUrl' => esc_url_raw( rest_url( 'boin/v1/' ) ),
         'nonce'     => wp_create_nonce( 'wp_rest' ),
         'homeUrl'   => esc_url_raw( bhs_service_url() ),
+        'audioMap'  => bhs_get_audio_map(),
     ) );
 }
 
