@@ -122,7 +122,7 @@ class BHS_Service_Page {
         echo '<section class="bhs-card bhs-flow-card" data-bhs-page="calibration">';
         echo '<div class="bhs-progress"><span>测试准备</span><span class="is-current">设备确认</span><span>左耳测试</span><span>右耳测试</span><span>测试完成</span></div>';
         echo '<h2>设备音量确认</h2><p>接下来会播放一段参考声音，请将手机或电脑音量调整到清晰、舒适且不刺耳的位置。该步骤不是医学声学校准。</p>';
-        echo '<label>手机号<input class="bhs-input" type="tel" data-bhs-phone placeholder="请输入手机号，便于保存本次筛查记录"></label>';
+        echo '<label>手机号<input class="bhs-input" type="tel" data-bhs-phone inputmode="numeric" maxlength="11" pattern="[0-9]{11}" placeholder="请输入11位手机号，便于保存本次筛查记录"></label>';
         echo '<div class="bhs-actions"><button class="bhs-btn bhs-btn-primary is-disabled" data-bhs-play-reference type="button" disabled>播放参考声音</button></div>';
         echo '<div class="bhs-calibration-options" hidden><button data-bhs-volume="small" type="button">声音太小</button><button data-bhs-volume="ok" type="button">音量合适</button><button data-bhs-volume="large" type="button">声音太大</button></div>';
         echo '<p class="bhs-form-msg" aria-live="polite"></p>';
@@ -180,7 +180,7 @@ class BHS_Service_Page {
         echo '<section class="bhs-card bhs-flow-card" data-bhs-page="request"><h2>提交远程调试需求</h2><p>请选择设备型号，并描述当前遇到的问题。后台验配师收到后会及时查看和处理。</p>';
         if ( $session ) echo '<p class="bhs-linked-session">已关联本次六频听力筛查记录</p>';
         echo '<form class="bhs-form" data-bhs-request-form><input type="hidden" name="session_uuid" value="' . esc_attr( $session ? $session->session_uuid : '' ) . '"><input type="hidden" name="session_token" value="' . esc_attr( sanitize_text_field( $_GET['token'] ?? '' ) ) . '">';
-        echo '<label>手机号<input type="tel" name="phone" required placeholder="请输入手机号"></label><label>设备型号<select name="device_id" required>';
+        echo '<label>手机号<input type="tel" name="phone" required inputmode="numeric" maxlength="11" pattern="[0-9]{11}" placeholder="请输入11位手机号"></label><label>设备型号<select name="device_id" required>';
         foreach ( $devices as $device ) echo '<option value="' . esc_attr( $device->ID ) . '">' . esc_html( get_the_title( $device ) ) . '</option>';
         echo '</select></label><label>主要问题<input type="text" name="main_problem" required placeholder="例如：人声不清楚、环境声偏大"></label><label>使用场景<input type="text" name="usage_scene" placeholder="例如：家庭交流、看电视、户外"></label><label>左右耳情况<input type="text" name="ear_description" placeholder="例如：左耳更明显、双耳都有"></label>';
         echo '<fieldset class="bhs-options"><legend>常见反馈</legend><label><input type="checkbox" name="feedback_options[]" value="啸叫"> 出现啸叫</label><label><input type="checkbox" name="feedback_options[]" value="刺耳"> 声音刺耳</label><label><input type="checkbox" name="feedback_options[]" value="人声不清楚"> 人声不清楚</label><label><input type="checkbox" name="feedback_options[]" value="环境声过大"> 环境声过大</label><label><input type="checkbox" name="feedback_options[]" value="电视声音偏小"> 电视声音偏小</label><label><input type="checkbox" name="feedback_options[]" value="声音闷"> 声音闷</label><label><input type="checkbox" name="feedback_options[]" value="断音不稳定"> 断音或声音不稳定</label></fieldset>';
