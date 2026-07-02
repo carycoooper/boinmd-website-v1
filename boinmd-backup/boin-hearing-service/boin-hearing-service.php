@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Plugin Name: Boin Hearing Service
  * Plugin URI:  https://www.boinmd.com.cn/

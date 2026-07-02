@@ -1,4 +1,4 @@
-﻿(function(){
+(function(){
   function qs(sel, root){ return (root || document).querySelector(sel); }
   function qsa(sel, root){ return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
   function msg(root, text, ok){
@@ -27,24 +27,44 @@
     var ctx = safeAudioContext();
     if(ctx.state === 'suspended') await ctx.resume();
     if(typeof ctx.createChannelMerger !== 'function') throw new Error('当前浏览器无法稳定控制左右声道，请更换浏览器后重试。');
-    var osc = ctx.createOscillator();
-    var gain = ctx.createGain();
-    var merger = ctx.createChannelMerger(2);
-    var duration = 1.2;
-    var now = ctx.currentTime;
-    var safeGain = Math.min(0.16, 0.035 + (Number(level || 3) * 0.018));
-    osc.type = 'sine';
-    osc.frequency.value = Number(freq || 1000);
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(safeGain, now + 0.08);
-    gain.gain.setValueAtTime(safeGain, now + duration - 0.12);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-    osc.connect(gain);
-    gain.connect(merger, 0, ear === 'right' ? 1 : 0);
-    merger.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + duration);
-    return new Promise(function(resolve){ setTimeout(function(){ ctx.close(); resolve(); }, (duration + 0.1) * 1000); });
+
+    return new Promise(function(resolve, reject){
+      var done = false;
+      var timeout = null;
+      var osc = null;
+      function finish(err){
+        if(done) return;
+        done = true;
+        if(timeout) clearTimeout(timeout);
+        try{ if(osc) osc.disconnect(); }catch(e){}
+        try{ ctx.close(); }catch(e){}
+        if(err) reject(err); else resolve();
+      }
+
+      try{
+        osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        var merger = ctx.createChannelMerger(2);
+        var duration = 1.2;
+        var now = ctx.currentTime;
+        var safeGain = Math.min(0.16, 0.035 + (Number(level || 3) * 0.018));
+        osc.type = 'sine';
+        osc.frequency.value = Number(freq || 1000);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(safeGain, now + 0.08);
+        gain.gain.setValueAtTime(safeGain, now + duration - 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        osc.connect(gain);
+        gain.connect(merger, 0, ear === 'right' ? 1 : 0);
+        merger.connect(ctx.destination);
+        osc.onended = function(){ finish(); };
+        timeout = setTimeout(function(){ finish(new Error('声音播放超时，请检查浏览器音频权限或更换浏览器后重试。')); }, 4000);
+        osc.start(now);
+        osc.stop(now + duration);
+      }catch(err){
+        finish(err);
+      }
+    });
   }
 
   document.addEventListener('change', function(e){
