@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Plugin Name: Boin Knowledge Hub
  * Plugin URI:  https://www.boinmd.com.cn/

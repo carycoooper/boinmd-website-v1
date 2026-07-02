@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Knowledge Hub landing page (/knowledge/)
  */
