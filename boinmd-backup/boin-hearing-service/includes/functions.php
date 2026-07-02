@@ -121,6 +121,32 @@ function bhs_get_audio_map() {
 }
 
 
+
+function bhs_level_to_estimated_dbhl( $level ) {
+    $level = (int) $level;
+    $map = array(
+        1 => 25,
+        2 => 35,
+        3 => 45,
+        4 => 55,
+        5 => 65,
+        6 => 75,
+    );
+    return isset( $map[ $level ] ) ? $map[ $level ] : null;
+}
+
+function bhs_average_number( $values ) {
+    $values = array_values( array_filter( $values, static function( $value ) {
+        return is_numeric( $value );
+    } ) );
+    if ( empty( $values ) ) return null;
+    return round( array_sum( $values ) / count( $values ) );
+}
+
+function bhs_db_label( $db ) {
+    return $db === null ? '高于75 dBHL或未响应' : '约' . $db . ' dBHL';
+}
+
 function bhs_generate_hearing_test_summary( $rows ) {
     if ( is_string( $rows ) ) {
         $decoded = json_decode( $rows, true );
@@ -147,74 +173,85 @@ function bhs_generate_hearing_test_summary( $rows ) {
             continue;
         }
         $level = isset( $row['relative_level'] ) && $row['relative_level'] !== '' && $row['relative_level'] !== null ? (int) $row['relative_level'] : null;
+        $db    = $level === null ? null : bhs_level_to_estimated_dbhl( $level );
         $by_ear[ $ear ][ $freq ] = array(
             'level'  => $level,
+            'db'     => $db,
             'status' => isset( $row['result_status'] ) ? sanitize_key( $row['result_status'] ) : '',
         );
     }
 
     $lines = array();
-    $lines[] = '六频在线听力筛查已完成，以下内容仅作远程验配服务沟通参考，不替代专业听力检查或诊断。';
-    $lines[] = '读数说明：相对音量等级越高，通常表示该频率需要更高的播放强度才有反应；若显示未响应，建议验配师重点复核该频率及对应生活场景。';
+    $lines[] = '六频在线听力筛查已完成，以下为根据相对音量等级换算的远程服务估算值，仅供验配师沟通和调试参考，不替代专业纯音听阈检查或医疗诊断。';
+    $lines[] = '换算说明：Level 1-6 暂按约 25/35/45/55/65/75 dBHL 估算；Level 越高，表示该频率需要更高相对音量才有反应，应结合用户主诉和佩戴反馈复核。';
 
-    $ear_avgs = array();
+    $ear_group_db = array();
+    $ear_avg_db   = array();
     foreach ( $by_ear as $ear => $items ) {
-        $parts = array();
+        $db_values = array();
+        $parts     = array();
         foreach ( $freqs as $freq ) {
             if ( ! isset( $items[ $freq ] ) ) {
                 $parts[] = $freq . 'Hz：未记录';
                 continue;
             }
             $level = $items[ $freq ]['level'];
-            $parts[] = $freq . 'Hz：' . ( $level === null ? '未响应' : 'Level ' . $level );
+            $db    = $items[ $freq ]['db'];
+            if ( $db !== null ) $db_values[] = $db;
+            $parts[] = $freq . 'Hz：' . ( $level === null ? '最高等级未响应' : 'Level ' . $level . ' / ' . bhs_db_label( $db ) );
         }
-        $lines[] = $ear_labels[ $ear ] . '结果：' . implode( '；', $parts ) . '。';
+        $avg = bhs_average_number( $db_values );
+        $ear_avg_db[ $ear ] = $avg;
+        $lines[] = $ear_labels[ $ear ] . '全频平均估算听见阈值：' . bhs_db_label( $avg ) . '。';
+        $lines[] = $ear_labels[ $ear ] . '各频点结果：' . implode( '；', $parts ) . '?';
 
         $group_parts = array();
         foreach ( $groups as $group_key => $group_freqs ) {
             $vals = array();
             foreach ( $group_freqs as $freq ) {
-                if ( isset( $items[ $freq ] ) && $items[ $freq ]['level'] !== null ) {
-                    $vals[] = (int) $items[ $freq ]['level'];
+                if ( isset( $items[ $freq ] ) && $items[ $freq ]['db'] !== null ) {
+                    $vals[] = (int) $items[ $freq ]['db'];
                 }
             }
-            if ( $vals ) {
-                $avg = array_sum( $vals ) / count( $vals );
-                $ear_avgs[ $ear ][ $group_key ] = $avg;
-                $group_parts[] = $group_names[ $group_key ] . '平均约 Level ' . round( $avg, 1 );
+            $group_avg = bhs_average_number( $vals );
+            if ( $group_avg !== null ) {
+                $ear_group_db[ $ear ][ $group_key ] = $group_avg;
+                $group_parts[] = $group_names[ $group_key ] . '平均估算' . bhs_db_label( $group_avg );
             }
         }
         if ( $group_parts ) {
-            $lines[] = $ear_labels[ $ear ] . '频段观察：' . implode( '；', $group_parts ) . '。';
+            $lines[] = $ear_labels[ $ear ] . '分频段观察：' . implode( '；', $group_parts ) . '?';
+        }
+    }
+
+    if ( isset( $ear_avg_db['left'], $ear_avg_db['right'] ) ) {
+        $diff = abs( (int) $ear_avg_db['left'] - (int) $ear_avg_db['right'] );
+        if ( $diff >= 10 ) {
+            $side = $ear_avg_db['left'] > $ear_avg_db['right'] ? '左耳' : '右耳';
+            $lines[] = '左右耳平均估算听见阈值差异较明显，' . $side . '整体需要更高相对声级才有反应。建议左右耳分别调试，不要直接套用同一增益曲线。';
         }
     }
 
     foreach ( array( 'left', 'right' ) as $ear ) {
-        if ( empty( $ear_avgs[ $ear ] ) ) continue;
-        $high  = $ear_avgs[ $ear ]['high'] ?? null;
-        $mid   = $ear_avgs[ $ear ]['speech'] ?? null;
-        $low   = $ear_avgs[ $ear ]['low'] ?? null;
+        if ( empty( $ear_group_db[ $ear ] ) ) continue;
+        $high  = $ear_group_db[ $ear ]['high'] ?? null;
+        $mid   = $ear_group_db[ $ear ]['speech'] ?? null;
+        $low   = $ear_group_db[ $ear ]['low'] ?? null;
         $label = $ear_labels[ $ear ];
-        if ( $high !== null && $mid !== null && $high - $mid >= 1 ) {
-            $lines[] = $label . '高频相对等级高于语音频段，调试时可重点关注高频清晰度、齿音/尖锐感和嘈杂环境中人声边缘，不建议一次性大幅提高，应结合佩戴反馈逐步微调。';
+        if ( $high !== null && $mid !== null && $high - $mid >= 10 ) {
+            $lines[] = $label . '高频估算阈值明显高于语音频段，调试时可重点关注高频语音清晰度、齿音、尖锐感和嘈杂环境人声边缘。建议逐步增加高频增益，并让用户反馈是否刺耳或声音发薄。';
         }
-        if ( $low !== null && $mid !== null && $low - $mid >= 1 ) {
-            $lines[] = $label . '低频相对等级偏高，建议关注低频增益、堵耳感、闷胀感和环境低频噪声，必要时结合通气/佩戴舒适度一起判断。';
+        if ( $low !== null && $mid !== null && $low - $mid >= 10 ) {
+            $lines[] = $label . '低频估算阈值偏高，建议关注低频增益、堵耳感、闷胀感和环境低频噪声，必要时结合通气和佩戴舒适度一起判断。';
         }
-    }
-
-    foreach ( $groups as $group_key => $_ ) {
-        if ( isset( $ear_avgs['left'][ $group_key ], $ear_avgs['right'][ $group_key ] ) ) {
-            $diff = abs( $ear_avgs['left'][ $group_key ] - $ear_avgs['right'][ $group_key ] );
-            if ( $diff >= 1 ) {
-                $side = $ear_avgs['left'][ $group_key ] > $ear_avgs['right'][ $group_key ] ? '左耳' : '右耳';
-                $lines[] = $group_names[ $group_key ] . '左右差异较明显，' . $side . '需要更高相对等级。验配师可分别询问两侧听感，并按左右耳独立微调。';
-            }
+        if ( $mid !== null && $mid >= 55 ) {
+            $lines[] = $label . '语音频段估算阈值偏高，建议优先围绕人声清晰度调整，重点复核家人对话、看电视和电话沟通场景。';
         }
     }
 
-    $lines[] = '建议验配师回访时重点询问：家人说话是否清楚、电视音量是否偏大、嘈杂环境是否费力、声音是否刺耳或发闷、是否有啸叫、佩戴是否舒适。';
-    $lines[] = '调试方向建议：先结合用户主诉确定优先场景，再按左右耳和频段逐步调整；每次调整后让用户在真实沟通、电视和户外场景中复核，具体适配效果因人而异。';
+    $lines[] = '给验配师的处理建议：先看左右耳平均 dBHL 和高频/语音频段差异，再结合用户主诉判断是优先提升人声清晰度、降低刺耳感，还是处理闷、啸叫或环境声过大问题。';
+    $lines[] = '建议回访追问：家人说话是否清楚、电视音量是否偏大、嘈杂环境是否费力、声音是否刺耳或发闷、是否有啸叫、佩戴是否舒适。';
+    $lines[] = '调试落地建议：每次只做小幅调整，调整后让用户在真实家庭沟通、看电视和户外场景中复核，具体适配效果因人而异。';
 
     return implode( "\n", $lines );
 }

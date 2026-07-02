@@ -159,7 +159,7 @@
 
   function isPhoneReady(card){
     var input = qs('[data-bhs-phone]', card);
-    return !!(input && phoneDigits(input.value).length >= 7);
+    return !!(input && phoneDigits(input.value).length === 11);
   }
 
   function updateReferenceButton(card){

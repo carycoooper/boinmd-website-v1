@@ -45,6 +45,7 @@ class BHS_REST_API {
     public function create_session( WP_REST_Request $request ) {
         global $wpdb;
         $phone = bhs_sanitize_phone( $request->get_param( 'phone' ) );
+        if ( strlen( preg_replace( '/\D+/', '', $phone ) ) !== 11 ) return new WP_Error( 'invalid_phone', '请填写完整的11位手机号。', array( 'status' => 400 ) );
         $client = bhs_client_info();
         $uuid = wp_generate_uuid4();
         $token = wp_generate_password( 40, false, false );
@@ -175,6 +176,7 @@ class BHS_REST_API {
     public function create_service_request( WP_REST_Request $request ) {
         global $wpdb;
         $phone = bhs_sanitize_phone( $request->get_param( 'phone' ) );
+        if ( strlen( preg_replace( '/\D+/', '', $phone ) ) !== 11 ) return new WP_Error( 'invalid_phone', '请填写完整的11位手机号。', array( 'status' => 400 ) );
         $device_id = absint( $request->get_param( 'device_id' ) );
         $device = $device_id ? get_post( $device_id ) : null;
         $main_problem = sanitize_text_field( (string) $request->get_param( 'main_problem' ) );
