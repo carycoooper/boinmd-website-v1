@@ -87,21 +87,12 @@ class BHS_Service_Page {
         status_header( 200 );
         get_header();
         echo '<main class="bhs-service-page" aria-label="悦听礼赠款助听器远程服务">';
-        $this->render_header();
         $method = 'render_' . $this->route_key();
         if ( method_exists( $this, $method ) ) $this->$method();
         else $this->render_home();
         echo '</main>';
         get_footer();
         exit;
-    }
-
-    private function render_header() {
-        echo '<section class="bhs-service-hero"><div class="bhs-service-wrap">';
-        echo '<p class="bhs-eyebrow">BOINMD HEARING SERVICE</p>';
-        echo '<h1>悦听礼赠款助听器远程服务</h1>';
-        echo '<p>您可以在线完成六频听力筛查，也可以直接提交助听器调试需求，后台验配师会及时查看并处理。</p>';
-        echo '</div></section>';
     }
 
     private function back_home() {
