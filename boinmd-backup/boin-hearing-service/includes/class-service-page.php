@@ -16,6 +16,17 @@ class BHS_Service_Page {
         add_action( 'template_redirect', array( $this, 'render_page' ) );
         add_filter( 'document_title_parts', array( $this, 'title_parts' ), 30 );
         add_filter( 'pre_get_document_title', array( $this, 'document_title' ), 30 );
+        add_filter( 'wpseo_title', array( $this, 'seo_title' ), 99 );
+        add_filter( 'wpseo_metadesc', array( $this, 'seo_description' ), 99 );
+        add_filter( 'wpseo_opengraph_title', array( $this, 'seo_title' ), 99 );
+        add_filter( 'wpseo_opengraph_desc', array( $this, 'seo_description' ), 99 );
+        add_filter( 'wpseo_canonical', array( $this, 'seo_canonical' ), 99 );
+        add_filter( 'wpseo_opengraph_url', array( $this, 'seo_canonical' ), 99 );
+        add_filter( 'wpseo_robots', array( $this, 'seo_robots' ), 99 );
+        add_filter( 'wp_robots', array( $this, 'wp_robots' ), 99 );
+        add_filter( 'the_generator', '__return_empty_string', 99 );
+        remove_action( 'wp_head', 'wp_generator' );
+        add_action( 'wp_head', array( $this, 'output_json_ld' ), 30 );
         add_action( 'init', array( $this, 'maybe_flush_rewrite' ), 30 );
         add_shortcode( 'boin_hearing_service_home', array( $this, 'shortcode_home' ) );
         add_shortcode( 'boin_hearing_test_intro', array( $this, 'shortcode_test_intro' ) );
@@ -62,14 +73,156 @@ class BHS_Service_Page {
         return $map[ $path ] ?? 'home';
     }
 
+    private function route_meta() {
+        $brand = '博音BOINMD';
+        $meta = array(
+            'home' => array(
+                'path' => '',
+                'title' => '在线听力筛查｜六频左右耳自测 - 博音BOINMD',
+                'description' => '约3分钟完成免费的六频在线听力筛查，左右耳分别测试，结果仅供远程验配服务沟通参考，不替代专业听力检查或诊断。',
+                'index' => true,
+            ),
+            'test_intro' => array(
+                'path' => 'test-intro/',
+                'title' => '听力筛查准备 - 博音BOINMD',
+                'description' => '开始六频在线听力筛查前，请确认安静环境、耳机佩戴和测试注意事项。',
+                'index' => false,
+            ),
+            'test_calibration' => array(
+                'path' => 'test-calibration/',
+                'title' => '设备音量确认 - 博音BOINMD',
+                'description' => '播放参考声音并确认设备音量，帮助后续左右耳六频筛查保持相对一致。',
+                'index' => false,
+            ),
+            'test' => array(
+                'path' => 'test/',
+                'title' => '六频听力筛查进行中 - 博音BOINMD',
+                'description' => '按步骤完成左右耳六个频率的在线听力筛查。',
+                'index' => false,
+            ),
+            'test_result' => array(
+                'path' => 'test-result/',
+                'title' => '听力筛查结果 - 博音BOINMD',
+                'description' => '查看本次六频听力筛查参考结果，并可选择提交助听器调试需求。',
+                'index' => false,
+            ),
+            'test_stopped' => array(
+                'path' => 'test-stopped/',
+                'title' => '听力筛查已停止 - 博音BOINMD',
+                'description' => '本次听力筛查已停止，可返回首页后重新开始。',
+                'index' => false,
+            ),
+            'request' => array(
+                'path' => 'request/',
+                'title' => '提交助听器调试需求 - 博音BOINMD',
+                'description' => '提交悦听礼赠款助听器使用问题，后台验配师会结合信息进行远程服务沟通。',
+                'index' => false,
+            ),
+            'request_success' => array(
+                'path' => 'request-success/',
+                'title' => '调试需求已提交 - 博音BOINMD',
+                'description' => '助听器调试需求已提交成功，验配师会及时查看并处理。',
+                'index' => false,
+            ),
+        );
+        $route = $this->route_key();
+        return $meta[ $route ] ?? $meta['home'];
+    }
+
+    private function route_canonical_url() {
+        $meta = $this->route_meta();
+        return bhs_service_url( $meta['path'] );
+    }
+
     public function title_parts( $title ) {
-        if ( $this->is_service_page() ) $title['title'] = '测听服务';
+        if ( $this->is_service_page() ) {
+            $title['title'] = $this->route_meta()['title'];
+            unset( $title['tagline'] );
+        }
         return $title;
     }
 
     public function document_title( $title ) {
-        if ( $this->is_service_page() ) return '测听服务 - 博音悦听礼赠';
+        if ( $this->is_service_page() ) return $this->route_meta()['title'];
         return $title;
+    }
+
+    public function seo_title( $title ) {
+        if ( $this->is_service_page() ) return $this->route_meta()['title'];
+        return $title;
+    }
+
+    public function seo_description( $description ) {
+        if ( $this->is_service_page() ) return $this->route_meta()['description'];
+        return $description;
+    }
+
+    public function seo_canonical( $url ) {
+        if ( $this->is_service_page() ) return $this->route_canonical_url();
+        return $url;
+    }
+
+    public function seo_robots( $robots ) {
+        if ( ! $this->is_service_page() ) return $robots;
+        return $this->route_meta()['index'] ? 'index, follow' : 'noindex, follow';
+    }
+
+    public function wp_robots( $robots ) {
+        if ( ! $this->is_service_page() ) return $robots;
+        if ( $this->route_meta()['index'] ) {
+            unset( $robots['noindex'] );
+            $robots['index'] = true;
+        } else {
+            unset( $robots['index'] );
+            $robots['noindex'] = true;
+        }
+        $robots['follow'] = true;
+        return $robots;
+    }
+
+    public function output_json_ld() {
+        if ( ! $this->is_service_page() || $this->route_key() !== 'home' ) return;
+
+        $url = $this->route_canonical_url();
+        $data = array(
+            '@context' => 'https://schema.org',
+            '@graph' => array(
+                array(
+                    '@type' => 'MedicalWebPage',
+                    '@id' => $url . '#medical-webpage',
+                    'name' => '在线听力筛查',
+                    'url' => $url,
+                    'description' => $this->route_meta()['description'],
+                    'inLanguage' => 'zh-CN',
+                    'about' => array(
+                        '@type' => 'MedicalCondition',
+                        'name' => '听力变化',
+                    ),
+                    'isPartOf' => array(
+                        '@type' => 'WebSite',
+                        'name' => '博音BOINMD',
+                        'url' => home_url( '/' ),
+                    ),
+                ),
+                array(
+                    '@type' => 'WebApplication',
+                    '@id' => $url . '#web-application',
+                    'name' => '六频在线听力筛查',
+                    'url' => $url,
+                    'applicationCategory' => 'HealthApplication',
+                    'operatingSystem' => 'Web',
+                    'inLanguage' => 'zh-CN',
+                    'description' => '通过左右耳六个频率的在线筛查，为远程验配服务沟通提供参考。',
+                    'offers' => array(
+                        '@type' => 'Offer',
+                        'price' => '0',
+                        'priceCurrency' => 'CNY',
+                    ),
+                ),
+            ),
+        );
+
+        echo '<script type="application/ld+json">' . wp_json_encode( $data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) . '</script>' . "\n";
     }
 
     public function maybe_flush_rewrite() {
