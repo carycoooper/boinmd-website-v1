@@ -159,7 +159,7 @@
 
   function isPhoneReady(card){
     var input = qs('[data-bhs-phone]', card);
-    return !!(input && phoneDigits(input.value).length === 11);
+    return !input || phoneDigits(input.value).length === 11;
   }
 
   function updateReferenceButton(card){
@@ -229,11 +229,6 @@
     var playRef = e.target.closest('[data-bhs-play-reference]');
     if(playRef){
       var card = playRef.closest('[data-bhs-page]');
-      if(!isPhoneReady(card)){
-        msg(card, '请先填写手机号，便于保存本次筛查记录。', false);
-        updateReferenceButton(card);
-        return;
-      }
       var revealTimer = null;
       try{
         playRef.disabled = true;
@@ -276,15 +271,10 @@
     var startTest = e.target.closest('[data-bhs-start-test]');
     if(startTest){
       var card3 = startTest.closest('[data-bhs-page]');
-      var phone = (qs('[data-bhs-phone]', card3) || {}).value || '';
-      if(!phone){
-        msg(card3, '请先填写手机号，便于验配师查看本次筛查记录。', false);
-        return;
-      }
       try{
         startTest.disabled = true;
         msg(card3, '正在创建测试会话...', true);
-        var created = await post('sessions', {phone: phone});
+        var created = await post('sessions', {});
         await post('sessions/' + created.session_uuid + '/calibration', {
           token: created.session_token,
           headphone_confirmed: true,

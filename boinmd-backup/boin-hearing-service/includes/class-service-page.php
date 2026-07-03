@@ -238,6 +238,7 @@ class BHS_Service_Page {
         if ( ! $this->is_service_page() ) return;
         bhs_enqueue_frontend_assets();
         status_header( 200 );
+        remove_action( 'wp_head', '_wp_render_title_tag', 1 );
         get_header();
         echo '<main class="bhs-service-page" aria-label="悦听礼赠款助听器远程服务">';
         $method = 'render_' . $this->route_key();
@@ -275,7 +276,6 @@ class BHS_Service_Page {
         echo '<section class="bhs-card bhs-flow-card" data-bhs-page="calibration">';
         echo '<div class="bhs-progress"><span>测试准备</span><span class="is-current">设备确认</span><span>左耳测试</span><span>右耳测试</span><span>测试完成</span></div>';
         echo '<h2>设备音量确认</h2><p>接下来会播放一段参考声音，请将手机或电脑音量调整到清晰、舒适且不刺耳的位置。该步骤不是医学声学校准。</p>';
-        echo '<label>手机号<input class="bhs-input" type="tel" data-bhs-phone inputmode="numeric" maxlength="11" pattern="[0-9]{11}" placeholder="请输入11位手机号，便于保存本次筛查记录"></label>';
         echo '<div class="bhs-actions"><button class="bhs-btn bhs-btn-primary is-disabled" data-bhs-play-reference type="button" disabled>播放参考声音</button></div>';
         echo '<div class="bhs-calibration-options" hidden><button data-bhs-volume="small" type="button">声音太小</button><button data-bhs-volume="ok" type="button">音量合适</button><button data-bhs-volume="large" type="button">声音太大</button></div>';
         echo '<p class="bhs-form-msg" aria-live="polite"></p>';

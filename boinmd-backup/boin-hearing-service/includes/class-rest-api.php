@@ -44,8 +44,7 @@ class BHS_REST_API {
 
     public function create_session( WP_REST_Request $request ) {
         global $wpdb;
-        $phone = bhs_sanitize_phone( $request->get_param( 'phone' ) );
-        if ( strlen( preg_replace( '/\D+/', '', $phone ) ) !== 11 ) return new WP_Error( 'invalid_phone', '请填写完整的11位手机号。', array( 'status' => 400 ) );
+        $phone = '';
         $client = bhs_client_info();
         $uuid = wp_generate_uuid4();
         $token = wp_generate_password( 40, false, false );
@@ -193,6 +192,7 @@ class BHS_REST_API {
         $wpdb->insert( BHS_DB::requests_table(), array( 'request_uuid' => $uuid, 'phone' => $phone, 'device_id' => $device->ID, 'device_name_snapshot' => get_the_title( $device ), 'hearing_session_id' => $session ? $session->id : null, 'main_problem' => $main_problem, 'usage_scene' => sanitize_text_field( (string) $request->get_param( 'usage_scene' ) ), 'ear_description' => sanitize_text_field( (string) $request->get_param( 'ear_description' ) ), 'feedback_options_json' => wp_json_encode( array_map( 'sanitize_text_field', (array) $request->get_param( 'feedback_options' ) ), JSON_UNESCAPED_UNICODE ), 'description' => $description, 'status' => 'pending', 'wecom_status' => 'pending', 'created_at' => $now, 'updated_at' => $now ), array( '%s','%s','%d','%s','%d','%s','%s','%s','%s','%s','%s','%s','%s','%s' ) );
         $request_id = (int) $wpdb->insert_id;
         if ( ! $request_id ) return new WP_Error( 'request_failed', '需求提交失败，请稍后重试。', array( 'status' => 500 ) );
+        if ( $session ) $this->attach_phone_to_session( (int) $session->id, $phone );
         $wecom = BHS_WeCom::send_service_request( $request_id );
         if ( is_wp_error( $wecom ) ) {
             $wpdb->update( BHS_DB::requests_table(), array( 'wecom_status' => 'failed', 'wecom_error' => $wecom->get_error_message(), 'updated_at' => $now ), array( 'id' => $request_id ), array( '%s','%s','%s' ), array( '%d' ) );
@@ -215,6 +215,35 @@ class BHS_REST_API {
     public function create_legacy_test( WP_REST_Request $request ) {
         return rest_ensure_response( array( 'success' => false, 'message' => '请使用新版六频在线听力筛查流程。' ) );
     }
+
+    private function attach_phone_to_session( $session_id, $phone ) {
+        global $wpdb;
+        $session_id = absint( $session_id );
+        $phone = bhs_sanitize_phone( $phone );
+        if ( ! $session_id || $phone === '' ) return;
+
+        $wpdb->update( BHS_DB::sessions_table(), array( 'phone' => $phone, 'updated_at' => bhs_current_time() ), array( 'id' => $session_id ), array( '%s','%s' ), array( '%d' ) );
+        $session = $wpdb->get_row( $wpdb->prepare( 'SELECT session_uuid FROM ' . BHS_DB::sessions_table() . ' WHERE id = %d', $session_id ) );
+        if ( ! $session || empty( $session->session_uuid ) ) return;
+
+        $posts = get_posts( array(
+            'post_type'      => 'hearing_test',
+            'post_status'    => 'any',
+            'meta_key'       => 'session_uuid',
+            'meta_value'     => $session->session_uuid,
+            'fields'         => 'ids',
+            'posts_per_page' => 10,
+        ) );
+
+        foreach ( $posts as $post_id ) {
+            update_post_meta( $post_id, 'user_phone', $phone );
+            wp_update_post( array(
+                'ID'         => $post_id,
+                'post_title' => '六频筛查 - ' . bhs_mask_phone( $phone ) . ' - ' . bhs_current_time(),
+            ) );
+        }
+    }
+
     private function sync_session_to_cpt( $session_id ) {
         global $wpdb;
         $session = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . BHS_DB::sessions_table() . ' WHERE id = %d', $session_id ) );
@@ -222,7 +251,7 @@ class BHS_REST_API {
         $exists = get_posts( array( 'post_type' => 'hearing_test', 'post_status' => 'any', 'meta_key' => 'session_uuid', 'meta_value' => $session->session_uuid, 'fields' => 'ids', 'posts_per_page' => 1 ) );
         if ( ! empty( $exists ) ) return;
         $rows = $wpdb->get_results( $wpdb->prepare( 'SELECT ear, frequency, relative_level, result_status FROM ' . BHS_DB::results_table() . ' WHERE session_id = %d ORDER BY ear ASC, frequency ASC', $session_id ), ARRAY_A );
-        $post_id = wp_insert_post( array( 'post_type' => 'hearing_test', 'post_status' => 'publish', 'post_title' => '六频筛查 - ' . bhs_mask_phone( $session->phone ) . ' - ' . bhs_current_time() ) );
+        $post_id = wp_insert_post( array( 'post_type' => 'hearing_test', 'post_status' => 'publish', 'post_title' => '六频筛查 - ' . ( $session->phone ? bhs_mask_phone( $session->phone ) : '未留手机号' ) . ' - ' . bhs_current_time() ) );
         if ( $post_id && ! is_wp_error( $post_id ) ) {
             update_post_meta( $post_id, 'session_uuid', $session->session_uuid );
             update_post_meta( $post_id, 'user_phone', $session->phone );

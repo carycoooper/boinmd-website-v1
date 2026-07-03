@@ -203,7 +203,7 @@ function bhs_generate_hearing_test_summary( $rows ) {
         $avg = bhs_average_number( $db_values );
         $ear_avg_db[ $ear ] = $avg;
         $lines[] = $ear_labels[ $ear ] . '全频平均估算听见阈值：' . bhs_db_label( $avg ) . '。';
-        $lines[] = $ear_labels[ $ear ] . '各频点结果：' . implode( '；', $parts ) . '?';
+        $lines[] = $ear_labels[ $ear ] . '各频点结果：' . implode( '；', $parts ) . '。';
 
         $group_parts = array();
         foreach ( $groups as $group_key => $group_freqs ) {
@@ -220,7 +220,7 @@ function bhs_generate_hearing_test_summary( $rows ) {
             }
         }
         if ( $group_parts ) {
-            $lines[] = $ear_labels[ $ear ] . '分频段观察：' . implode( '；', $group_parts ) . '?';
+            $lines[] = $ear_labels[ $ear ] . '分频段观察：' . implode( '；', $group_parts ) . '。';
         }
     }
 
