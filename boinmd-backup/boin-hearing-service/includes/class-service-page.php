@@ -317,21 +317,70 @@ class BHS_Service_Page {
         echo '</section>';
     }
 
+
+
+    private function result_overview( $rows ) {
+        $freqs = array( 250, 500, 1000, 2000, 4000, 8000 );
+        $ears = array( 'left' => '左耳', 'right' => '右耳' );
+        $by_ear = array( 'left' => array(), 'right' => array() );
+
+        foreach ( $rows as $row ) {
+            $ear = isset( $row->ear ) ? sanitize_key( $row->ear ) : '';
+            $freq = isset( $row->frequency ) ? (int) $row->frequency : 0;
+            if ( ! isset( $by_ear[ $ear ] ) || ! in_array( $freq, $freqs, true ) ) continue;
+            $level = isset( $row->relative_level ) && $row->relative_level !== null && $row->relative_level !== '' ? (int) $row->relative_level : null;
+            $by_ear[ $ear ][ $freq ] = $level === null ? null : bhs_level_to_estimated_dbhl( $level );
+        }
+
+        $cards = array();
+        $focus = array();
+        foreach ( $ears as $ear => $label ) {
+            $values = array_values( array_filter( $by_ear[ $ear ], static function( $value ) { return is_numeric( $value ); } ) );
+            $avg = bhs_average_number( $values );
+            $cards[ $ear ] = array( 'label' => $label, 'value' => bhs_db_label( $avg ) );
+
+            $speech = bhs_average_number( array_filter( array( $by_ear[ $ear ][1000] ?? null, $by_ear[ $ear ][2000] ?? null ), 'is_numeric' ) );
+            $high = bhs_average_number( array_filter( array( $by_ear[ $ear ][4000] ?? null, $by_ear[ $ear ][8000] ?? null ), 'is_numeric' ) );
+            if ( $high !== null && $high >= 55 ) $focus[] = $label . '：高频响应偏弱，验配师可重点关注人声清晰度、尖锐感和嘈杂环境沟通。';
+            elseif ( $speech !== null && $speech >= 55 ) $focus[] = $label . '：语音频段响应偏弱，验配师可重点关注家人对话、看电视和电话沟通。';
+        }
+
+        return array(
+            'cards' => $cards,
+            'focus' => empty( $focus ) ? '筛查已完成，建议结合日常听声场景继续观察。' : implode( ' ', array_unique( $focus ) ),
+        );
+    }
+
     public function render_test_result() {
         $this->back_home();
         $session = $this->current_session();
         if ( ! $session ) { $this->expired(); return; }
         global $wpdb;
         $rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM ' . BHS_DB::results_table() . ' WHERE session_id = %d ORDER BY ear ASC, frequency ASC', $session->id ) );
-        echo '<section class="bhs-card bhs-flow-card"><h2>测试结果</h2><p>该结果仅用于远程服务沟通和助听器调试参考，不替代专业纯音测听及医疗诊断。</p>';
+        $overview = $this->result_overview( $rows );
+        $devices = bhs_get_active_devices();
+        $device_id = ! empty( $devices ) ? (int) $devices[0]->ID : 0;
+        $token = sanitize_text_field( $_GET['token'] ?? '' );
+
+        echo '<section class="bhs-card bhs-flow-card"><h2>测试结果</h2><p>本次结果仅作远程服务沟通参考，不替代专业听力检查或诊断。</p>';
         echo '<div class="bhs-result-grid"><div><strong>测试记录编号</strong><span>' . esc_html( $session->session_uuid ) . '</span></div><div><strong>完成时间</strong><span>' . esc_html( $session->completed_at ?: bhs_current_time() ) . '</span></div></div>';
-        echo '<div class="bhs-table-wrap"><table class="bhs-result-table"><thead><tr><th>耳侧</th><th>频率</th><th>相对听见等级</th><th>状态</th></tr></thead><tbody>';
+        echo '<div class="bhs-result-overview">';
+        echo '<div class="bhs-result-pill"><strong>左耳平均估算</strong><span>' . esc_html( $overview['cards']['left']['value'] ?? '暂无足够数据' ) . '</span></div>';
+        echo '<div class="bhs-result-pill"><strong>右耳平均估算</strong><span>' . esc_html( $overview['cards']['right']['value'] ?? '暂无足够数据' ) . '</span></div>';
+        echo '<div class="bhs-result-pill bhs-result-focus"><strong>重点关注</strong><span>' . esc_html( $overview['focus'] ) . '</span></div>';
+        echo '</div>';
+        if ( $device_id ) {
+            echo '<section class="bhs-result-lead"><h3>获取完整报告与验配师免费解读</h3><p>留下手机号后，验配师会结合本次筛查记录和使用场景，给出更具体的助听器调试建议。</p><form class="bhs-form" data-bhs-request-form>';
+            echo '<input type="hidden" name="session_uuid" value="' . esc_attr( $session->session_uuid ) . '"><input type="hidden" name="session_token" value="' . esc_attr( $token ) . '">';
+            echo '<input type="hidden" name="device_id" value="' . esc_attr( $device_id ) . '"><input type="hidden" name="main_problem" value="申请完整报告与验配师免费解读">';
+            echo '<input type="hidden" name="usage_scene" value="六频在线听力筛查结果页"><input type="hidden" name="ear_description" value=""><input type="hidden" name="description" value="用户已完成六频在线听力筛查，希望获取完整报告和验配师免费解读。">';
+            echo '<label>手机号<input type="tel" name="phone" required inputmode="numeric" maxlength="11" pattern="[0-9]{11}" placeholder="请输入11位手机号，便于验配师联系"></label>';
+            echo '<label class="bhs-consent"><input type="checkbox" name="privacy_confirmed" value="1" required> 我同意将手机号和本次筛查记录用于远程服务沟通</label><button class="bhs-btn bhs-btn-primary" type="submit">发送完整报告并免费解读</button><p class="bhs-form-msg" aria-live="polite"></p></form></section>';
+        }
+        echo '<details class="bhs-result-details"><summary>查看12项测试明细</summary><div class="bhs-table-wrap"><table class="bhs-result-table"><thead><tr><th>耳侧</th><th>频率</th><th>相对听见等级</th><th>状态</th></tr></thead><tbody>';
         foreach ( $rows as $row ) echo '<tr><td>' . esc_html( $row->ear === 'right' ? '右耳' : '左耳' ) . '</td><td>' . esc_html( $row->frequency ) . ' Hz</td><td>' . esc_html( $row->relative_level ?: '最高等级未响应' ) . '</td><td>' . esc_html( $row->result_status ) . '</td></tr>';
-        echo '</tbody></table></div>';
-        echo '<p class="bhs-note">本次测试中，部分频率可能需要更高的相对播放等级。本次结果可供远程服务沟通参考。</p>';
-        echo '<div class="bhs-actions"><a class="bhs-btn bhs-btn-primary" href="' . esc_url( bhs_service_url() ) . '">返回远程服务首页</a><a class="bhs-btn bhs-btn-ghost" href="' . esc_url( bhs_service_url( 'test-intro/' ) ) . '">重新测试</a></div>';
-        echo '<p><a href="' . esc_url( bhs_service_url( 'request/', array( 'session' => $session->session_uuid, 'token' => sanitize_text_field( $_GET['token'] ?? '' ) ) ) ) . '">另有助听器使用问题？提交调试需求</a></p>';
-        echo '</section>';
+        echo '</tbody></table></div></details><p class="bhs-note">提示：相对等级越高，通常表示该频率需要更高播放强度才有反应；完整解读需结合用户主诉、佩戴反馈和真实生活场景。</p>';
+        echo '<div class="bhs-actions"><a class="bhs-btn bhs-btn-primary" href="' . esc_url( bhs_service_url() ) . '">返回远程服务首页</a><a class="bhs-btn bhs-btn-ghost" href="' . esc_url( bhs_service_url( 'test-intro/' ) ) . '">替父母或家人再测一次</a></div></section>';
     }
 
     public function render_test_stopped() {
