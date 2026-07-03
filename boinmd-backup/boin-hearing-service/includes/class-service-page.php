@@ -134,6 +134,18 @@ class BHS_Service_Page {
         return bhs_service_url( $meta['path'] );
     }
 
+    public function dedupe_title_tags( $html ) {
+        if ( ! is_string( $html ) || stripos( $html, '<title' ) === false ) return $html;
+        if ( ! preg_match_all( '#<title\b[^>]*>.*?</title>\s*#is', $html, $matches, PREG_OFFSET_CAPTURE ) ) return $html;
+        if ( count( $matches[0] ) < 2 ) return $html;
+
+        for ( $i = count( $matches[0] ) - 2; $i >= 0; $i-- ) {
+            $match = $matches[0][ $i ];
+            $html = substr_replace( $html, '', $match[1], strlen( $match[0] ) );
+        }
+        return $html;
+    }
+
     public function title_parts( $title ) {
         if ( $this->is_service_page() ) {
             $title['title'] = $this->route_meta()['title'];
@@ -239,6 +251,7 @@ class BHS_Service_Page {
         bhs_enqueue_frontend_assets();
         status_header( 200 );
         remove_action( 'wp_head', '_wp_render_title_tag', 1 );
+        ob_start( array( $this, 'dedupe_title_tags' ) );
         get_header();
         echo '<main class="bhs-service-page" aria-label="悦听礼赠款助听器远程服务">';
         $method = 'render_' . $this->route_key();
