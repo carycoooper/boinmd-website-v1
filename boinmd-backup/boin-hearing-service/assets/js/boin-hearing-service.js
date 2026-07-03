@@ -77,11 +77,8 @@
   }
 
   function makeAudio(url){
-    var audio = document.createElement('audio');
-    var source = document.createElement('source');
-    source.src = url;
-    source.type = 'audio/wav';
-    audio.appendChild(source);
+    var audio = new Audio();
+    audio.src = url;
     audio.preload = 'auto';
     audio.playsInline = true;
     audio.volume = 1;
