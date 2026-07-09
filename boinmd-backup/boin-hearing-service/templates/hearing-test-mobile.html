@@ -169,6 +169,17 @@
     font-size:11px;color:var(--ink-3);line-height:1.8;margin:4px 0 18px;
   }
   .disclaimer b{color:var(--ink-2)}
+  .lead-card{margin-bottom:16px;border:2px solid rgba(109,76,224,.12);background:linear-gradient(135deg,#fff,#fbf8ff)}
+  .lead-card h3{font-size:18px;margin-bottom:8px;color:var(--ink)}
+  .lead-card p{font-size:13px;color:var(--ink-2);line-height:1.7;margin-bottom:14px}
+  .lead-form{display:flex;flex-direction:column;gap:10px}
+  .lead-form input[type="tel"]{width:100%;border:1px solid #ddd4ea;border-radius:14px;padding:14px 15px;font-size:16px;background:#fff;color:var(--ink);font-family:inherit}
+  .lead-form input[type="tel"]:focus{outline:2px solid rgba(109,76,224,.16);border-color:var(--teal)}
+  .lead-consent{display:flex;align-items:flex-start;gap:9px;font-size:12px;color:var(--ink-3);line-height:1.55}
+  .lead-consent input{margin-top:2px;accent-color:var(--teal)}
+  .lead-msg{min-height:18px;font-size:12px;text-align:center;color:var(--red);font-weight:600}
+  .locked-result{display:none}
+  .locked-result.unlocked{display:block;animation:fadeUp .45s ease both}
   .result-actions{display:flex;flex-direction:column;gap:10px}
 </style>
 </head>
@@ -618,8 +629,42 @@ function showResult(){
   $('advice-list').innerHTML = advice.map(a => `<li>${a}</li>`).join('');
   if (g === 'red') $('medical-note').style.display = 'block';
 
+  resetLockedReport();
+}
+
+function resetLockedReport(){
+  const phone = $('lead-phone'), consent = $('lead-consent'), msg = $('lead-msg');
+  if (phone) phone.value = '';
+  if (consent) consent.checked = false;
+  if (msg) msg.textContent = '';
+  ['locked-chart','locked-bands-title','bands'].forEach(id => {
+    const el = $(id);
+    if (el) el.classList.remove('unlocked');
+  });
+}
+
+function unlockReport(e){
+  if (e) e.preventDefault();
+  const phone = $('lead-phone'), consent = $('lead-consent'), msg = $('lead-msg');
+  const digits = (phone ? phone.value : '').replace(/\D+/g, '');
+  if (digits.length !== 11){
+    if (msg) msg.textContent = '请输入11位手机号后查看完整听力图。';
+    if (phone) phone.focus();
+    return;
+  }
+  if (!consent || !consent.checked){
+    if (msg) msg.textContent = '请先确认同意验配师联系解读。';
+    return;
+  }
+  if (msg) msg.textContent = '';
   drawAudiogram();
   drawBands();
+  ['locked-chart','locked-bands-title','bands'].forEach(id => {
+    const el = $(id);
+    if (el) el.classList.add('unlocked');
+  });
+  const chart = $('locked-chart');
+  if (chart) chart.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 function drawAudiogram(){
