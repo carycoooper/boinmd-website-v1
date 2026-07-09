@@ -98,7 +98,10 @@
   .progress-txt{font-size:11px;color:var(--ink-3);margin-top:6px;text-align:right}
 
   .stage{display:flex;flex-direction:column;align-items:center;padding:10px 0 4px}
-  .orb-wrap{position:relative;width:220px;height:220px;display:flex;align-items:center;justify-content:center;margin:6px 0 10px}
+  .orb-wrap{position:relative;width:100%;max-width:520px;display:flex;align-items:center;justify-content:center;margin:6px 0 18px}
+  .freq-panel-img{display:block;width:100%;height:auto;border-radius:18px;box-shadow:0 16px 42px rgba(70,45,160,.16);transition:transform .25s ease, filter .25s ease}
+  .playing .freq-panel-img{transform:scale(1.015);filter:brightness(1.08) saturate(1.08)}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   .ring{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(125,89,233,.35);opacity:0;transform:scale(.6)}
   .playing .ring{animation:ripple 1.6s ease-out infinite}
   .playing .ring:nth-child(2){animation-delay:.4s}
@@ -137,7 +140,7 @@
     #scr-test .test-top,
     #scr-test .progress-wrap{max-width:520px;margin-left:auto;margin-right:auto}
     #scr-test .stage{max-width:520px;margin:0 auto;padding:34px 38px 30px;border-radius:24px}
-    #scr-test .orb-wrap{margin-top:0;margin-bottom:18px}
+    #scr-test .orb-wrap{margin-top:0;margin-bottom:22px}
     #scr-test .hint{margin-bottom:22px}
     #scr-test .answer-btns{gap:18px}
     #scr-test .answer-btns .btn{padding:18px 22px;font-size:18px;border-radius:18px}
@@ -296,11 +299,8 @@
 
     <div class="card stage" id="stage">
       <div class="orb-wrap" id="orb-wrap">
-        <div class="ring"></div><div class="ring"></div><div class="ring"></div>
-        <div class="orb">
-          <div class="ic eq"><i></i><i></i><i></i><i></i></div>
-          <div class="st" id="orb-status">准备中</div>
-        </div>
+        <img class="freq-panel-img" id="freq-panel-img" src="/blog/wp-content/plugins/boin-hearing-service/assets/images/frequency-panels/frequency-1000.png" alt="1000Hz">
+        <div class="st sr-only" id="orb-status">准备中</div>
       </div>
       <div class="hint" id="hint">注意听……</div>
       <div class="answer-btns">
@@ -484,10 +484,19 @@ function beginEar(){
   startCondition();
 }
 
+function frequencyPanelSrc(freq){ return '/blog/wp-content/plugins/boin-hearing-service/assets/images/frequency-panels/frequency-' + freq + '.png'; }
+function updateFrequencyPanel(freq){
+  const img = $('freq-panel-img');
+  if (!img) return;
+  img.src = frequencyPanelSrc(freq);
+  img.alt = freq + 'Hz';
+}
+
 function startCondition(){
   level = START_LEVEL; phase = 'search';
   const done = earIdx * FREQ_ORDER.length + freqIdx;
   $('freq-label').textContent = FREQ_ORDER[freqIdx] + ' Hz';
+  updateFrequencyPanel(FREQ_ORDER[freqIdx]);
   $('prog-fill').style.width = (done / 12 * 100) + '%';
   $('prog-txt').textContent = (done + 1) + ' / 12';
   playTrial();
