@@ -248,12 +248,21 @@ class BHS_Service_Page {
 
     public function render_page() {
         if ( ! $this->is_service_page() ) return;
+
+        $prototype = BHS_DIR . 'templates/hearing-test-mobile.html';
+        if ( is_readable( $prototype ) ) {
+            status_header( 200 );
+            header( 'Content-Type: text/html; charset=UTF-8' );
+            readfile( $prototype );
+            exit;
+        }
+
         bhs_enqueue_frontend_assets();
         status_header( 200 );
         remove_action( 'wp_head', '_wp_render_title_tag', 1 );
         ob_start( array( $this, 'dedupe_title_tags' ) );
         get_header();
-        echo '<main class="bhs-service-page" aria-label="悦听礼赠款助听器远程服务">';
+        echo '<main class="bhs-service-page" aria-label="Boin hearing service">';
         $method = 'render_' . $this->route_key();
         if ( method_exists( $this, $method ) ) $this->$method();
         else $this->render_home();
