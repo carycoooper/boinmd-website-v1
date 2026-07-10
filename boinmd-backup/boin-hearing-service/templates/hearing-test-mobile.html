@@ -202,6 +202,7 @@
   .lead-msg{min-height:18px;font-size:12px;text-align:center;color:var(--red);font-weight:600}
   .locked-result{display:none}
   .locked-result.unlocked{display:block;animation:fadeUp .45s ease both}
+  .bands.locked-result.unlocked{display:flex}
   .result-actions{display:flex;flex-direction:column;gap:10px}
 </style>
 </head>
@@ -334,18 +335,29 @@
       <div><h2 id="grade-title"></h2><p id="grade-desc"></p></div>
     </div>
 
-    <div class="card chart-card">
-      <h3>你的听力图</h3>
-      <p class="chart-sub">纵轴为可察觉的最小响度级(示意值),位置越靠下代表该频段需要更大的响度才能察觉。</p>
+    <div class="card lead-card" id="lead-card">
+      <h3>&#33719;&#21462;&#23436;&#25972;&#21548;&#21147;&#22270;&#19982;&#39564;&#37197;&#24072;&#35299;&#35835;</h3>
+      <p>&#26412;&#39029;&#20808;&#23637;&#31034;&#22522;&#30784;&#31579;&#26597;&#32467;&#35770;&#12290;&#22635;&#20889;&#23436;&#25972;&#25163;&#26426;&#21495;&#21518;&#65292;&#21487;&#26597;&#30475;&#21548;&#21147;&#22270;&#21644;&#21508;&#39057;&#27573;&#34920;&#29616;&#65292;&#39564;&#37197;&#24072;&#20063;&#21487;&#20197;&#32467;&#21512;&#32467;&#26524;&#32473;&#20986;&#26356;&#20855;&#20307;&#30340;&#35843;&#35797;&#24314;&#35758;&#12290;</p>
+      <form class="lead-form" onsubmit="unlockReport(event)">
+        <input type="tel" id="lead-phone" inputmode="numeric" maxlength="11" pattern="[0-9]{11}" placeholder="&#35831;&#36755;&#20837;11&#20301;&#25163;&#26426;&#21495;">
+        <label class="lead-consent"><input type="checkbox" id="lead-consent"> &#25105;&#21516;&#24847;&#39564;&#37197;&#24072;&#26681;&#25454;&#26412;&#27425;&#31579;&#26597;&#32467;&#26524;&#32852;&#31995;&#35299;&#35835;</label>
+        <button class="btn btn-primary" type="submit">&#26597;&#30475;&#23436;&#25972;&#21548;&#21147;&#22270;</button>
+        <div class="lead-msg" id="lead-msg" aria-live="polite"></div>
+      </form>
+    </div>
+
+    <div class="card chart-card locked-result" id="locked-chart">
+      <h3>&#20320;&#30340;&#21548;&#21147;&#22270;</h3>
+      <p class="chart-sub">&#32437;&#36724;&#20026;&#21487;&#23519;&#35273;&#30340;&#26368;&#23567;&#21709;&#24230;&#32423;(&#31034;&#24847;&#20540;)&#65292;&#20301;&#32622;&#36234;&#38752;&#19979;&#20195;&#34920;&#35813;&#39057;&#27573;&#38656;&#35201;&#26356;&#22823;&#30340;&#21709;&#24230;&#25165;&#33021;&#23519;&#35273;&#12290;</p>
       <div id="audiogram"></div>
       <div class="legend">
-        <div class="li"><svg width="14" height="14"><circle cx="7" cy="7" r="5" fill="none" stroke="#e0523f" stroke-width="2"/></svg>右耳</div>
-        <div class="li"><svg width="14" height="14"><path d="M2 2 L12 12 M12 2 L2 12" stroke="#2f6fd6" stroke-width="2"/></svg>左耳</div>
+        <div class="li"><svg width="14" height="14"><circle cx="7" cy="7" r="5" fill="none" stroke="#e0523f" stroke-width="2"/></svg>&#21491;&#32819;</div>
+        <div class="li"><svg width="14" height="14"><path d="M2 2 L12 12 M12 2 L2 12" stroke="#2f6fd6" stroke-width="2"/></svg>&#24038;&#32819;</div>
       </div>
     </div>
 
-    <div class="sec-title" style="margin:0 6px 10px">各频段表现</div>
-    <div class="bands" id="bands"></div>
+    <div class="sec-title locked-result" id="locked-bands-title" style="margin:0 6px 10px">&#21508;&#39057;&#27573;&#34920;&#29616;</div>
+    <div class="bands locked-result" id="bands"></div>
 
     <div class="card advice">
       <h3 class="sec-title" style="margin:0 0 4px">下一步建议</h3>
@@ -688,12 +700,13 @@ function resetLockedReport(){
   if (phone) phone.value = '';
   if (consent) consent.checked = false;
   if (msg) msg.textContent = '';
+  $('audiogram').innerHTML = '';
+  $('bands').innerHTML = '';
   ['locked-chart','locked-bands-title','bands'].forEach(id => {
     const el = $(id);
     if (el) el.classList.remove('unlocked');
   });
 }
-
 function unlockReport(e){
   if (e) e.preventDefault();
   const phone = $('lead-phone'), consent = $('lead-consent'), msg = $('lead-msg');
