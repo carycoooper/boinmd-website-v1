@@ -128,17 +128,17 @@
   .answer-btns{display:flex;gap:12px;width:100%}
   .btn-yes{background:linear-gradient(135deg,#7d59e9,#5e3bd6);color:#fff;box-shadow:0 8px 18px rgba(94,59,214,.3)}
   .btn-no{background:#fff;color:var(--ink-2);box-shadow:var(--shadow)}
-  .replay{margin:18px auto 0;background:none;border:none;color:#fff;font-size:13px;font-weight:700;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;padding:0;transition:transform .16s ease, opacity .2s ease}
+  .replay{margin:12px auto 10px;background:none;border:none;color:#fff;font-size:13px;font-weight:800;font-family:inherit;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:transform .16s ease, opacity .2s ease}
   .replay:active{transform:scale(.96)}
   .replay:disabled{opacity:.52;pointer-events:none}
-  .play-orb-mini{width:78px;height:78px;border-radius:50%;background:linear-gradient(145deg,#8a63f2,#5b38d4);box-shadow:0 13px 28px rgba(94,59,214,.36), inset 0 -5px 12px rgba(0,0,0,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:visible}
-  .play-orb-mini::before,.play-orb-mini::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:1.5px solid rgba(125,89,233,.24);opacity:.75}
-  .play-orb-mini::after{inset:-16px;opacity:.35}
+  .play-orb-mini{width:72px;height:72px;border-radius:50%;background:linear-gradient(145deg,#8a63f2,#5b38d4);box-shadow:0 13px 28px rgba(94,59,214,.36), inset 0 -5px 12px rgba(0,0,0,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;position:relative;overflow:visible}
+  .play-orb-mini::before,.play-orb-mini::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:1.5px solid rgba(125,89,233,.22);opacity:.72;pointer-events:none}
+  .play-orb-mini::after{inset:-14px;opacity:.32}
   .playing .play-orb-mini{animation:breathe 1.2s ease-in-out infinite}
-  .play-orb-mini .eq{height:16px;margin-bottom:4px}
+  .play-orb-mini .eq{height:13px;margin:0}
   .play-orb-mini .eq i{width:4px;height:6px;background:#fff;border-radius:2px}
   .playing .play-orb-mini .eq i{animation:eq .8s ease-in-out infinite}
-  .replay #replay-label{color:var(--teal);font-size:14px;line-height:1;white-space:nowrap}
+  .replay #replay-label{color:#fff;font-size:13px;line-height:1;white-space:nowrap;position:relative;z-index:1}
   .ear-switch{ text-align:center;padding:40px 20px}
   .ear-switch .big{font-size:58px;margin-bottom:12px}
   .ear-switch h2{font-size:22px;margin-bottom:8px}
@@ -311,15 +311,14 @@
         <img class="freq-panel-img" id="freq-panel-img" src="/blog/wp-content/plugins/boin-hearing-service/assets/images/frequency-panels/frequency-1000.png" alt="1000Hz">
         <div class="st sr-only" id="orb-status">准备中</div>
       </div>
+      <button class="replay" id="btn-replay" disabled onclick="replay()" aria-label="播放测试音">
+        <span class="play-orb-mini" aria-hidden="true"><span class="eq"><i></i><i></i><i></i><i></i></span><span id="replay-label">播放</span></span>
+      </button>
       <div class="hint" id="hint">注意听……</div>
       <div class="answer-btns">
         <button class="btn btn-yes" id="btn-yes" disabled onclick="respond(true)">听到了</button>
         <button class="btn btn-no" id="btn-no" disabled onclick="respond(false)">没有听到</button>
       </div>
-      <button class="replay" id="btn-replay" disabled onclick="replay()" aria-label="播放测试音">
-        <span class="play-orb-mini" aria-hidden="true"><span class="eq"><i></i><i></i><i></i><i></i></span></span>
-        <span id="replay-label">播放</span>
-      </button>
     </div>
   </section>
 
