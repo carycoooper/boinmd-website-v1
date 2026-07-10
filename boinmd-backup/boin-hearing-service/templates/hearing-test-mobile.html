@@ -309,7 +309,7 @@
       </div>
       <button class="replay" id="btn-replay" disabled onclick="replay()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2-9.4L1 10"/></svg>
-        再听一次
+        <span id="replay-label">播放测试音</span>
       </button>
     </div>
   </section>
@@ -499,33 +499,57 @@ function startCondition(){
   updateFrequencyPanel(FREQ_ORDER[freqIdx]);
   $('prog-fill').style.width = (done / 12 * 100) + '%';
   $('prog-txt').textContent = (done + 1) + ' / 12';
-  playTrial();
+  prepareTrial();
+}
+
+function prepareTrial(){
+  player.onended = null;
+  player.pause();
+  const freq = FREQ_ORDER[freqIdx];
+  toneEnded = false; heardClicked = false;
+  $('btn-yes').disabled = true;
+  $('btn-no').disabled = true;
+  $('btn-replay').disabled = false;
+  $('replay-label').textContent = '播放测试音';
+  $('orb-status').textContent = '准备中';
+  $('hint').textContent = '点击「播放测试音」后，听到任何声音就点「听到了」';
+  $('stage').classList.remove('playing');
+  updateFrequencyPanel(freq);
 }
 
 function playTrial(){
   const ear = EARS[earIdx], freq = FREQ_ORDER[freqIdx];
   toneEnded = false; heardClicked = false;
-  $('btn-yes').disabled = true; $('btn-no').disabled = true; $('btn-replay').disabled = true;
-  $('orb-status').textContent = '注意听';
+  $('btn-yes').disabled = true;
+  $('btn-no').disabled = true;
+  $('btn-replay').disabled = true;
+  $('orb-status').textContent = '播放中';
   $('hint').textContent = '听到任何声音就点「听到了」';
-  $('orb-wrap').parentElement.classList.remove('playing');
+  $('stage').classList.add('playing');
 
-  const delay = 500 + Math.random() * 900;   // 随机静默,防止节奏猜测
-  setTimeout(()=>{
-    unlocking = false;
-    player.onended = () => {
+  unlocking = false;
+  player.onended = () => {
+    $('stage').classList.remove('playing');
+    $('orb-status').textContent = '听到了吗?';
+    $('replay-label').textContent = '再听一次';
+    toneEnded = true;
+    enableNo();
+  };
+  player.muted = false;
+  player.src = src(ear.folder, freq, level);
+  const playPromise = player.play();
+  if (playPromise && typeof playPromise.catch === 'function') {
+    playPromise.catch(() => {
       $('stage').classList.remove('playing');
-      $('orb-status').textContent = '听到了吗?';
-      toneEnded = true;
-      enableNo();
-    };
-    player.muted = false;
-    player.src = src(ear.folder, freq, level);
-    player.play().catch(()=>{ toneEnded = true; enableNo(); });
-    $('stage').classList.add('playing');
-    $('orb-status').textContent = '播放中';
-    $('btn-yes').disabled = false;           // 听到可立即作答
-  }, delay);
+      $('orb-status').textContent = '播放失败';
+      $('hint').textContent = '声音没有播放出来，请再点一次「播放测试音」。';
+      $('replay-label').textContent = '播放测试音';
+      $('btn-replay').disabled = false;
+      $('btn-yes').disabled = true;
+      $('btn-no').disabled = true;
+    });
+  }
+  $('btn-yes').disabled = false;
 }
 function enableNo(){
   if (!heardClicked){ $('btn-no').disabled = false; $('btn-replay').disabled = false; }
@@ -552,12 +576,12 @@ function respond(heard){
 function stepDown(d){
   if (level <= LEVEL_MIN){ finishCondition(LEVEL_MIN); return; }
   level = Math.max(LEVEL_MIN, level - d);
-  playTrial();
+  prepareTrial();
 }
 function stepUp(d){
   if (level >= LEVEL_MAX){ finishCondition(NO_RESPONSE); return; }
   level = Math.min(LEVEL_MAX, level + d);
-  playTrial();
+  prepareTrial();
 }
 
 function finishCondition(threshold){
