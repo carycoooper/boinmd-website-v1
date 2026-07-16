@@ -3,7 +3,7 @@
  * Plugin Name: Boin Hearing Service
  * Plugin URI:  https://www.boinmd.com.cn/
  * Description: 博音悦听礼赠款远程服务系统：在线听力筛查、用户需求、设备型号、企业微信通知与后台管理。
- * Version:     0.6.7
+ * Version:     0.6.8
  * Author:      博音 BOINMD
  * Text Domain: boin-hearing-service
  * Requires PHP: 7.4
@@ -11,7 +11,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'BHS_VERSION', '0.6.7' );
+define( 'BHS_VERSION', '0.6.8' );
 define( 'BHS_FILE', __FILE__ );
 define( 'BHS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'BHS_URL', plugin_dir_url( __FILE__ ) );

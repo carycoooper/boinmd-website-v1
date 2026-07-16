@@ -24,6 +24,8 @@ class BHS_REST_API {
         register_rest_route( self::NS, '/sessions/(?P<uuid>[a-zA-Z0-9\-]+)/interrupt', array( 'methods' => 'POST', 'callback' => array( $this, 'interrupt_session' ), 'permission_callback' => array( $this, 'check_nonce' ) ) );
         register_rest_route( self::NS, '/sessions/(?P<uuid>[a-zA-Z0-9\-]+)/result', array( 'methods' => 'GET', 'callback' => array( $this, 'get_result' ), 'permission_callback' => '__return_true' ) );
         register_rest_route( self::NS, '/requests', array( 'methods' => 'POST', 'callback' => array( $this, 'create_service_request' ), 'permission_callback' => array( $this, 'check_nonce' ) ) );
+        register_rest_route( self::NS, '/mobile-tests', array( 'methods' => 'POST', 'callback' => array( $this, 'save_mobile_test' ), 'permission_callback' => array( $this, 'check_nonce' ) ) );
+        register_rest_route( self::NS, '/mobile-tests/(?P<uuid>[a-zA-Z0-9\-]+)/phone', array( 'methods' => 'POST', 'callback' => array( $this, 'attach_mobile_test_phone' ), 'permission_callback' => array( $this, 'check_nonce' ) ) );
 
         register_rest_route( self::LEGACY_NS, '/devices', array( 'methods' => 'GET', 'callback' => array( $this, 'get_devices' ), 'permission_callback' => '__return_true' ) );
         register_rest_route( self::LEGACY_NS, '/request', array( 'methods' => 'POST', 'callback' => array( $this, 'create_legacy_request' ), 'permission_callback' => array( $this, 'check_nonce' ) ) );
@@ -216,6 +218,101 @@ class BHS_REST_API {
         return rest_ensure_response( array( 'success' => false, 'message' => '请使用新版六频在线听力筛查流程。' ) );
     }
 
+    public function save_mobile_test( WP_REST_Request $request ) {
+        $results = $request->get_param( 'results' );
+        $rows = $this->mobile_results_to_rows( is_array( $results ) ? $results : array() );
+        if ( empty( $rows ) ) {
+            return new WP_Error( 'invalid_mobile_results', 'invalid mobile hearing results', array( 'status' => 400 ) );
+        }
+
+        $uuid = wp_generate_uuid4();
+        $now = bhs_current_time();
+        $summary = bhs_generate_hearing_test_summary( $rows );
+        $post_id = wp_insert_post( array(
+            'post_type'   => 'hearing_test',
+            'post_status' => 'publish',
+            'post_title'  => '六频筛查 - 未留手机号 - ' . $now,
+        ) );
+
+        if ( ! $post_id || is_wp_error( $post_id ) ) {
+            return new WP_Error( 'mobile_test_failed', 'mobile hearing result save failed', array( 'status' => 500 ) );
+        }
+
+        update_post_meta( $post_id, 'session_uuid', $uuid );
+        update_post_meta( $post_id, 'user_phone', '' );
+        update_post_meta( $post_id, 'headphone_profile', sanitize_text_field( (string) $request->get_param( 'headphone' ) ) );
+        update_post_meta( $post_id, 'freq_result', wp_json_encode( $rows, JSON_UNESCAPED_UNICODE ) );
+        update_post_meta( $post_id, 'summary', $summary );
+        update_post_meta( $post_id, 'created_at', $now );
+
+        return rest_ensure_response( array(
+            'success' => true,
+            'data'    => array(
+                'test_uuid' => $uuid,
+                'post_id'   => (int) $post_id,
+            ),
+        ) );
+    }
+
+    public function attach_mobile_test_phone( WP_REST_Request $request ) {
+        $uuid = sanitize_text_field( (string) $request['uuid'] );
+        $phone = bhs_sanitize_phone( $request->get_param( 'phone' ) );
+        if ( strlen( preg_replace( '/\D+/', '', $phone ) ) !== 11 ) {
+            return new WP_Error( 'invalid_phone', 'invalid phone', array( 'status' => 400 ) );
+        }
+
+        $posts = get_posts( array(
+            'post_type'      => 'hearing_test',
+            'post_status'    => 'any',
+            'meta_key'       => 'session_uuid',
+            'meta_value'     => $uuid,
+            'fields'         => 'ids',
+            'posts_per_page' => 1,
+        ) );
+
+        if ( empty( $posts ) ) {
+            return new WP_Error( 'mobile_test_not_found', 'mobile hearing result not found', array( 'status' => 404 ) );
+        }
+
+        $post_id = (int) $posts[0];
+        update_post_meta( $post_id, 'user_phone', $phone );
+        wp_update_post( array(
+            'ID'         => $post_id,
+            'post_title' => '六频筛查 - ' . bhs_mask_phone( $phone ) . ' - ' . bhs_current_time(),
+        ) );
+
+        return rest_ensure_response( array(
+            'success' => true,
+            'data'    => array(
+                'test_uuid' => $uuid,
+                'post_id'   => $post_id,
+            ),
+        ) );
+    }
+
+    private function mobile_results_to_rows( $results ) {
+        $rows = array();
+        foreach ( array( 'left', 'right' ) as $ear ) {
+            if ( empty( $results[ $ear ] ) || ! is_array( $results[ $ear ] ) ) {
+                continue;
+            }
+            foreach ( $this->freqs as $frequency ) {
+                if ( ! array_key_exists( (string) $frequency, $results[ $ear ] ) && ! array_key_exists( $frequency, $results[ $ear ] ) ) {
+                    continue;
+                }
+                $raw = array_key_exists( (string) $frequency, $results[ $ear ] ) ? $results[ $ear ][ (string) $frequency ] : $results[ $ear ][ $frequency ];
+                $level = (int) $raw;
+                $no_response = $level >= 105;
+                $rows[] = array(
+                    'ear'            => $ear,
+                    'frequency'      => (string) $frequency,
+                    'relative_level' => $no_response ? '' : (string) max( 1, min( 100, $level ) ),
+                    'result_status'  => $no_response ? 'no_response_at_max_level' : 'completed',
+                );
+            }
+        }
+        return $rows;
+    }
     private function attach_phone_to_session( $session_id, $phone ) {
         global $wpdb;
         $session_id = absint( $session_id );

@@ -253,7 +253,12 @@ class BHS_Service_Page {
         if ( is_readable( $prototype ) ) {
             status_header( 200 );
             header( 'Content-Type: text/html; charset=UTF-8' );
-            readfile( $prototype );
+            $html = file_get_contents( $prototype );
+            $data = '<script>window.BHS_DATA=' . wp_json_encode( array(
+                'restUrl' => esc_url_raw( rest_url( 'boin-hearing/v1/' ) ),
+                'nonce'   => wp_create_nonce( 'wp_rest' ),
+            ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . ';</script>';
+            echo str_replace( '<body>', '<body>' . $data, $html );
             exit;
         }
 

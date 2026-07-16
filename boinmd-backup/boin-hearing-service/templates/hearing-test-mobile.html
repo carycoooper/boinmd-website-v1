@@ -420,6 +420,7 @@ let earIdx = 0, freqIdx = 0;
 let level = START_LEVEL, phase = 'search';   // search / descend / ascend
 let results = { right:{}, left:{} };
 let audio = null, toneEnded = false, heardClicked = false;
+let savedTestUuid = null, saveTestPromise = null;
 
 const $ = id => document.getElementById(id);
 function goto(id){
@@ -430,6 +431,28 @@ function goto(id){
 function src(earFolder, freq, lv){ return AUDIO[earFolder+'/'+freq+'-'+lv]; }
 const player = new Audio(); player.preload = 'auto';
 let unlocking = false;
+async function bhsPost(endpoint, payload){
+  if (!window.BHS_DATA || !BHS_DATA.restUrl || !BHS_DATA.nonce) return null;
+  const res = await fetch(BHS_DATA.restUrl + endpoint, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-WP-Nonce':BHS_DATA.nonce},
+    body:JSON.stringify(payload || {})
+  });
+  const json = await res.json().catch(()=>({}));
+  if (!res.ok || json.success === false) throw new Error(json.message || 'request failed');
+  return json.data || json;
+}
+function saveMobileTest(){
+  if (saveTestPromise) return saveTestPromise;
+  saveTestPromise = bhsPost('mobile-tests', {
+    results:results,
+    headphone:hpProfile ? hpProfile.name : ''
+  }).then(data=>{
+    savedTestUuid = data && data.test_uuid ? data.test_uuid : null;
+    return data;
+  }).catch(()=>null);
+  return saveTestPromise;
+}
 function unlockAudio(){                       // iOS: 首次手势内解锁音频通道
   unlocking = true;
   player.muted = true; player.src = src('y',1000,5);
@@ -529,7 +552,7 @@ function playCalTone(btn){
  *  descend: 听到 -10;未听到 → ascend
  *  ascend : +5,首次听到即记为阈值
  * =======================================================*/
-function startTest(){ unlockAudio(); earIdx = 0; freqIdx = 0; beginEar(); }
+function startTest(){ unlockAudio(); earIdx = 0; freqIdx = 0; savedTestUuid = null; saveTestPromise = null; beginEar(); }
 
 function beginEar(){
   goto('scr-test');
@@ -728,6 +751,7 @@ function showResult(){
   if (g === 'red') $('medical-note').style.display = 'block';
 
   resetLockedReport();
+  saveMobileTest();
 }
 
 function resetLockedReport(){
@@ -756,6 +780,12 @@ function unlockReport(e){
     return;
   }
   if (msg) msg.textContent = '';
+  saveMobileTest().then(()=>{
+    if (savedTestUuid) return bhsPost('mobile-tests/' + savedTestUuid + '/phone', {phone:digits});
+    return null;
+  }).catch(()=>{
+    if (msg) msg.textContent = '\u542c\u529b\u56fe\u5df2\u89e3\u9501\uff0c\u4f46\u624b\u673a\u53f7\u540c\u6b65\u5230\u540e\u53f0\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002';
+  });
   drawAudiogram();
   drawBands();
   ['locked-chart','locked-bands-title','bands'].forEach(id => {
