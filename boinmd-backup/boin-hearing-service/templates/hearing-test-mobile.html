@@ -484,6 +484,21 @@ function selectHp(id){
 }
 
 let checkSide = null;
+let checkToneTimer = null;
+function resetCheckToneButton(){
+  const btn = $('btn-check-play');
+  if (!btn) return;
+  btn.disabled = false;
+  btn.textContent = '\u25b6 \u64ad\u653e\u63d0\u793a\u97f3';
+}
+function stopCheckTone(){
+  if (checkToneTimer){ clearTimeout(checkToneTimer); checkToneTimer = null; }
+  player.onended = null;
+  player.onerror = null;
+  player.pause();
+  try { player.currentTime = 0; } catch(e) {}
+  resetCheckToneButton();
+}
 function playCheckTone(){
   checkSide = Math.random() < .5 ? 'right' : 'left';
   const folder = checkSide === 'right' ? 'y' : 'z';
@@ -497,8 +512,7 @@ function playCheckTone(){
   const enableSideButtons = () => {
     if (!playFailed) $('btn-side-l').disabled = $('btn-side-r').disabled = false;
   };
-  player.pause();
-  player.currentTime = 0;
+  stopCheckTone();
   player.onerror = () => {
     playFailed = true;
     resetPlayButton();
@@ -506,6 +520,7 @@ function playCheckTone(){
     $('check-status').className = 'cal-status err';
   };
   player.onended = () => {
+    if (checkToneTimer){ clearTimeout(checkToneTimer); checkToneTimer = null; }
     resetPlayButton();
     enableSideButtons();
   };
@@ -518,19 +533,20 @@ function playCheckTone(){
   player.src = audioSrc;
   const playPromise = player.play();
   if (playPromise && typeof playPromise.then === 'function') {
-    playPromise.then(() => setTimeout(enableSideButtons, 1000)).catch(() => {
+    playPromise.then(() => { checkToneTimer = setTimeout(enableSideButtons, 1000); }).catch(() => {
       playFailed = true;
       resetPlayButton();
       $('check-status').textContent = '\u6d4f\u89c8\u5668\u672a\u80fd\u64ad\u653e\u63d0\u793a\u97f3\uff0c\u8bf7\u518d\u70b9\u4e00\u6b21\u64ad\u653e\u3002';
       $('check-status').className = 'cal-status err';
     });
   } else {
-    setTimeout(enableSideButtons, 1000);
+    checkToneTimer = setTimeout(enableSideButtons, 1000);
   }
 }
 function answerSide(side){
   const st = $('check-status');
   if (!checkSide){ return; }
+  stopCheckTone();
   if (side === checkSide){
     st.textContent = '✓ 耳机佩戴正确';
     st.className = 'cal-status ok';
