@@ -227,11 +227,15 @@ class BHS_REST_API {
 
         $uuid = wp_generate_uuid4();
         $now = bhs_current_time();
+        $phone = bhs_sanitize_phone( $request->get_param( 'phone' ) );
+        if ( strlen( preg_replace( '/\D+/', '', $phone ) ) !== 11 ) {
+            $phone = '';
+        }
         $summary = bhs_generate_hearing_test_summary( $rows );
         $post_id = wp_insert_post( array(
             'post_type'   => 'hearing_test',
             'post_status' => 'publish',
-            'post_title'  => '六频筛查 - 未留手机号 - ' . $now,
+            'post_title'  => '六频筛查 - ' . ( $phone ? bhs_mask_phone( $phone ) : '未留手机号' ) . ' - ' . $now,
         ) );
 
         if ( ! $post_id || is_wp_error( $post_id ) ) {
@@ -239,7 +243,7 @@ class BHS_REST_API {
         }
 
         update_post_meta( $post_id, 'session_uuid', $uuid );
-        update_post_meta( $post_id, 'user_phone', '' );
+        update_post_meta( $post_id, 'user_phone', $phone );
         update_post_meta( $post_id, 'headphone_profile', sanitize_text_field( (string) $request->get_param( 'headphone' ) ) );
         update_post_meta( $post_id, 'freq_result', wp_json_encode( $rows, JSON_UNESCAPED_UNICODE ) );
         update_post_meta( $post_id, 'summary', $summary );
