@@ -253,6 +253,8 @@ class BHS_Service_Page {
         if ( is_readable( $prototype ) ) {
             status_header( 200 );
             header( 'Content-Type: text/html; charset=UTF-8' );
+            header( 'Cache-Control: no-store, no-cache, must-revalidate, max-age=0' );
+            header( 'Pragma: no-cache' );
             $html = file_get_contents( $prototype );
             $data = '<script>window.BHS_DATA=' . wp_json_encode( array(
                 'restUrl' => esc_url_raw( rest_url( 'boin-hearing/v1/' ) ),

@@ -431,14 +431,26 @@ function goto(id){
 function src(earFolder, freq, lv){ return AUDIO[earFolder+'/'+freq+'-'+lv]; }
 const player = new Audio(); player.preload = 'auto';
 let unlocking = false;
-async function bhsPost(endpoint, payload){
-  if (!window.BHS_DATA || !BHS_DATA.restUrl || !BHS_DATA.nonce) return null;
+async function refreshBhsData(){
+  const res = await fetch('/hearing-service/?nonce_refresh=' + Date.now(), {cache:'no-store'});
+  const html = await res.text();
+  const m = html.match(/window\.BHS_DATA=(\{.*?\});/);
+  if (!m) throw new Error('fresh nonce missing');
+  window.BHS_DATA = JSON.parse(m[1]);
+  return window.BHS_DATA;
+}
+async function bhsPost(endpoint, payload, retried){
+  if (!window.BHS_DATA || !BHS_DATA.restUrl || !BHS_DATA.nonce) await refreshBhsData();
   const res = await fetch(BHS_DATA.restUrl + endpoint, {
     method:'POST',
     headers:{'Content-Type':'application/json','X-WP-Nonce':BHS_DATA.nonce},
     body:JSON.stringify(payload || {})
   });
   const json = await res.json().catch(()=>({}));
+  if ((!res.ok || json.success === false) && !retried && (res.status === 401 || res.status === 403 || json.code === 'rest_forbidden')) {
+    await refreshBhsData();
+    return bhsPost(endpoint, payload, true);
+  }
   if (!res.ok || json.success === false) throw new Error(json.message || 'request failed');
   return json.data || json;
 }
