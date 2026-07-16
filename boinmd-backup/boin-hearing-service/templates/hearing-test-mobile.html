@@ -459,11 +459,46 @@ let checkSide = null;
 function playCheckTone(){
   checkSide = Math.random() < .5 ? 'right' : 'left';
   const folder = checkSide === 'right' ? 'y' : 'z';
-  player.onended = () => { $('btn-side-l').disabled = $('btn-side-r').disabled = false; };
-  player.muted = false; player.src = src(folder, 1000, 60);
-  player.play();
+  const btn = $('btn-check-play');
+  const audioSrc = src(folder, 1000, 70);
+  let playFailed = false;
+  const resetPlayButton = () => {
+    btn.disabled = false;
+    btn.textContent = '\u25b6 \u64ad\u653e\u63d0\u793a\u97f3';
+  };
+  const enableSideButtons = () => {
+    if (!playFailed) $('btn-side-l').disabled = $('btn-side-r').disabled = false;
+  };
+  player.pause();
+  player.currentTime = 0;
+  player.onerror = () => {
+    playFailed = true;
+    resetPlayButton();
+    $('check-status').textContent = '\u63d0\u793a\u97f3\u64ad\u653e\u5931\u8d25\uff0c\u8bf7\u68c0\u67e5\u97f3\u91cf\u540e\u518d\u8bd5\u3002';
+    $('check-status').className = 'cal-status err';
+  };
+  player.onended = () => {
+    resetPlayButton();
+    enableSideButtons();
+  };
+  btn.disabled = true;
+  btn.textContent = '\u64ad\u653e\u4e2d...';
   $('check-status').textContent = '';
+  $('check-status').className = 'cal-status';
   $('btn-side-l').disabled = $('btn-side-r').disabled = true;
+  player.muted = false;
+  player.src = audioSrc;
+  const playPromise = player.play();
+  if (playPromise && typeof playPromise.then === 'function') {
+    playPromise.then(() => setTimeout(enableSideButtons, 1000)).catch(() => {
+      playFailed = true;
+      resetPlayButton();
+      $('check-status').textContent = '\u6d4f\u89c8\u5668\u672a\u80fd\u64ad\u653e\u63d0\u793a\u97f3\uff0c\u8bf7\u518d\u70b9\u4e00\u6b21\u64ad\u653e\u3002';
+      $('check-status').className = 'cal-status err';
+    });
+  } else {
+    setTimeout(enableSideButtons, 1000);
+  }
 }
 function answerSide(side){
   const st = $('check-status');
