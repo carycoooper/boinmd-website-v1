@@ -442,15 +442,20 @@ async function bhsPost(endpoint, payload){
   if (!res.ok || json.success === false) throw new Error(json.message || 'request failed');
   return json.data || json;
 }
-function saveMobileTest(){
+function saveMobileTest(force){
+  if (force && !savedTestUuid) saveTestPromise = null;
   if (saveTestPromise) return saveTestPromise;
   saveTestPromise = bhsPost('mobile-tests', {
     results:results,
     headphone:hpProfile ? hpProfile.name : ''
   }).then(data=>{
     savedTestUuid = data && data.test_uuid ? data.test_uuid : null;
+    if (!savedTestUuid) saveTestPromise = null;
     return data;
-  }).catch(()=>null);
+  }).catch(()=>{
+    saveTestPromise = null;
+    return null;
+  });
   return saveTestPromise;
 }
 function unlockAudio(){                       // iOS: 首次手势内解锁音频通道
@@ -780,9 +785,9 @@ function unlockReport(e){
     return;
   }
   if (msg) msg.textContent = '';
-  saveMobileTest().then(()=>{
+  saveMobileTest(true).then(()=>{
     if (savedTestUuid) return bhsPost('mobile-tests/' + savedTestUuid + '/phone', {phone:digits});
-    return null;
+    throw new Error('missing test uuid');
   }).catch(()=>{
     if (msg) msg.textContent = '\u542c\u529b\u56fe\u5df2\u89e3\u9501\uff0c\u4f46\u624b\u673a\u53f7\u540c\u6b65\u5230\u540e\u53f0\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002';
   });
