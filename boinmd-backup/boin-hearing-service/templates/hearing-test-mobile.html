@@ -441,12 +441,17 @@ async function refreshBhsData(){
 }
 async function bhsPost(endpoint, payload, retried){
   if (!window.BHS_DATA || !BHS_DATA.restUrl || !BHS_DATA.nonce) await refreshBhsData();
+  const data = Object.assign({}, payload || {});
+  const useSyncToken = endpoint.indexOf('mobile-tests') === 0 && window.BHS_DATA && BHS_DATA.syncToken;
+  if (useSyncToken && !data.sync_token) data.sync_token = BHS_DATA.syncToken;
+  const headers = {'Content-Type':'application/json'};
+  if (!useSyncToken) headers['X-WP-Nonce'] = BHS_DATA.nonce;
   const res = await fetch(BHS_DATA.restUrl + endpoint, {
     method:'POST',
     credentials:'same-origin',
     cache:'no-store',
-    headers:{'Content-Type':'application/json','X-WP-Nonce':BHS_DATA.nonce},
-    body:JSON.stringify((()=>{ const data = Object.assign({}, payload || {}); if (window.BHS_DATA && BHS_DATA.syncToken && !data.sync_token) data.sync_token = BHS_DATA.syncToken; return data; })())
+    headers:headers,
+    body:JSON.stringify(data)
   });
   const json = await res.json().catch(()=>({}));
   if ((!res.ok || json.success === false) && !retried && (res.status === 401 || res.status === 403 || json.code === 'rest_forbidden')) {
