@@ -419,7 +419,7 @@ let hpProfile = null;
 let earIdx = 0, freqIdx = 0;
 let level = START_LEVEL, phase = 'search';   // search / descend / ascend
 let results = { right:{}, left:{} };
-let audio = null, toneEnded = false, heardClicked = false;
+let audio = null, toneEnded = false, heardClicked = false, noButtonTimer = null;
 let savedTestUuid = null, saveTestPromise = null;
 
 const $ = id => document.getElementById(id);
@@ -637,6 +637,7 @@ function startCondition(){
 }
 
 function prepareTrial(){
+  if (noButtonTimer) { clearTimeout(noButtonTimer); noButtonTimer = null; }
   player.onended = null;
   player.pause();
   const freq = FREQ_ORDER[freqIdx];
@@ -652,6 +653,7 @@ function prepareTrial(){
 }
 
 function playTrial(){
+  if (noButtonTimer) { clearTimeout(noButtonTimer); noButtonTimer = null; }
   const ear = EARS[earIdx], freq = FREQ_ORDER[freqIdx];
   toneEnded = false; heardClicked = false;
   $('btn-yes').disabled = true;
@@ -669,11 +671,13 @@ function playTrial(){
     toneEnded = true;
     enableNo();
   };
+  noButtonTimer = setTimeout(enableNo, 2000);
   player.muted = false;
   player.src = src(ear.folder, freq, level);
   const playPromise = player.play();
   if (playPromise && typeof playPromise.catch === 'function') {
     playPromise.catch(() => {
+      if (noButtonTimer) { clearTimeout(noButtonTimer); noButtonTimer = null; }
       $('stage').classList.remove('playing');
       $('orb-status').textContent = '播放失败';
       $('hint').textContent = '声音没有播放出来，请再点一次播放按钮。';
@@ -691,6 +695,7 @@ function enableNo(){
 function replay(){ playTrial(); }
 
 function respond(heard){
+  if (noButtonTimer) { clearTimeout(noButtonTimer); noButtonTimer = null; }
   if (heard) heardClicked = true;
   player.onended = null; player.pause();
   $('stage').classList.remove('playing');
