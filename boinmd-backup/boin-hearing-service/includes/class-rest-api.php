@@ -24,8 +24,8 @@ class BHS_REST_API {
         register_rest_route( self::NS, '/sessions/(?P<uuid>[a-zA-Z0-9\-]+)/interrupt', array( 'methods' => 'POST', 'callback' => array( $this, 'interrupt_session' ), 'permission_callback' => array( $this, 'check_nonce' ) ) );
         register_rest_route( self::NS, '/sessions/(?P<uuid>[a-zA-Z0-9\-]+)/result', array( 'methods' => 'GET', 'callback' => array( $this, 'get_result' ), 'permission_callback' => '__return_true' ) );
         register_rest_route( self::NS, '/requests', array( 'methods' => 'POST', 'callback' => array( $this, 'create_service_request' ), 'permission_callback' => array( $this, 'check_nonce' ) ) );
-        register_rest_route( self::NS, '/mobile-tests', array( 'methods' => 'POST', 'callback' => array( $this, 'save_mobile_test' ), 'permission_callback' => array( $this, 'check_nonce' ) ) );
-        register_rest_route( self::NS, '/mobile-tests/(?P<uuid>[a-zA-Z0-9\-]+)/phone', array( 'methods' => 'POST', 'callback' => array( $this, 'attach_mobile_test_phone' ), 'permission_callback' => array( $this, 'check_nonce' ) ) );
+        register_rest_route( self::NS, '/mobile-tests', array( 'methods' => 'POST', 'callback' => array( $this, 'save_mobile_test' ), 'permission_callback' => array( $this, 'check_mobile_write_permission' ) ) );
+        register_rest_route( self::NS, '/mobile-tests/(?P<uuid>[a-zA-Z0-9\-]+)/phone', array( 'methods' => 'POST', 'callback' => array( $this, 'attach_mobile_test_phone' ), 'permission_callback' => array( $this, 'check_mobile_write_permission' ) ) );
 
         register_rest_route( self::LEGACY_NS, '/devices', array( 'methods' => 'GET', 'callback' => array( $this, 'get_devices' ), 'permission_callback' => '__return_true' ) );
         register_rest_route( self::LEGACY_NS, '/request', array( 'methods' => 'POST', 'callback' => array( $this, 'create_legacy_request' ), 'permission_callback' => array( $this, 'check_nonce' ) ) );
@@ -38,6 +38,20 @@ class BHS_REST_API {
             return new WP_Error( 'rest_forbidden', '当前页面会话已过期，请刷新页面后重试。', array( 'status' => 403 ) );
         }
         return true;
+    }
+
+    public function check_mobile_write_permission( WP_REST_Request $request ) {
+        $nonce_ok = $this->check_nonce( $request );
+        if ( true === $nonce_ok ) {
+            return true;
+        }
+
+        $token = sanitize_text_field( (string) $request->get_param( 'sync_token' ) );
+        if ( $token !== '' && get_transient( 'bhs_mobile_sync_' . $token ) ) {
+            return true;
+        }
+
+        return new WP_Error( 'bhs_sync_forbidden', 'mobile sync token invalid', array( 'status' => 403 ) );
     }
 
     public function get_devices() {

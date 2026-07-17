@@ -256,9 +256,12 @@ class BHS_Service_Page {
             header( 'Cache-Control: no-store, no-cache, must-revalidate, max-age=0' );
             header( 'Pragma: no-cache' );
             $html = file_get_contents( $prototype );
+            $sync_token = wp_generate_password( 32, false, false );
+            set_transient( 'bhs_mobile_sync_' . $sync_token, 1, 2 * HOUR_IN_SECONDS );
             $data = '<script>window.BHS_DATA=' . wp_json_encode( array(
-                'restUrl' => esc_url_raw( rest_url( 'boin-hearing/v1/' ) ),
-                'nonce'   => wp_create_nonce( 'wp_rest' ),
+                'restUrl'   => esc_url_raw( rest_url( 'boin-hearing/v1/' ) ),
+                'nonce'     => wp_create_nonce( 'wp_rest' ),
+                'syncToken' => $sync_token,
             ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . ';</script>';
             echo str_replace( '<body>', '<body>' . $data, $html );
             exit;

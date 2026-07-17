@@ -446,7 +446,7 @@ async function bhsPost(endpoint, payload, retried){
     credentials:'same-origin',
     cache:'no-store',
     headers:{'Content-Type':'application/json','X-WP-Nonce':BHS_DATA.nonce},
-    body:JSON.stringify(payload || {})
+    body:JSON.stringify((()=>{ const data = Object.assign({}, payload || {}); if (window.BHS_DATA && BHS_DATA.syncToken && !data.sync_token) data.sync_token = BHS_DATA.syncToken; return data; })())
   });
   const json = await res.json().catch(()=>({}));
   if ((!res.ok || json.success === false) && !retried && (res.status === 401 || res.status === 403 || json.code === 'rest_forbidden')) {
@@ -837,11 +837,11 @@ function unlockReport(e){
   }).then(data=>{
     if (data && data.test_uuid) savedTestUuid = data.test_uuid;
     if (msg) msg.textContent = '';
-  }).catch(()=>{
+  }).catch((err)=>{
     if (savedTestUuid) {
       return bhsPost('mobile-tests/' + savedTestUuid + '/phone', {phone:digits});
     }
-    throw new Error('sync failed');
+    throw err;
   }).then(()=>{
     if (msg) msg.textContent = '';
   }).catch((err)=>{
