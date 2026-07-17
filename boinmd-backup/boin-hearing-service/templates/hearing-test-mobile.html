@@ -784,7 +784,6 @@ function showResult(){
   if (g === 'red') $('medical-note').style.display = 'block';
 
   resetLockedReport();
-  saveMobileTest();
 }
 
 function resetLockedReport(){
@@ -813,17 +812,19 @@ function unlockReport(e){
     return;
   }
   if (msg) msg.textContent = '';
-  saveMobileTest(true).then(()=>{
-    if (savedTestUuid) return bhsPost('mobile-tests/' + savedTestUuid + '/phone', {phone:digits});
-    throw new Error('missing test uuid');
-  }).catch(()=>{
-    return bhsPost('mobile-tests', {
-      results:results,
-      headphone:hpProfile ? hpProfile.name : '',
-      phone:digits
-    });
+  bhsPost('mobile-tests', {
+    results:results,
+    headphone:hpProfile ? hpProfile.name : '',
+    phone:digits
   }).then(data=>{
     if (data && data.test_uuid) savedTestUuid = data.test_uuid;
+    if (msg) msg.textContent = '';
+  }).catch(()=>{
+    if (savedTestUuid) {
+      return bhsPost('mobile-tests/' + savedTestUuid + '/phone', {phone:digits});
+    }
+    throw new Error('sync failed');
+  }).then(()=>{
     if (msg) msg.textContent = '';
   }).catch(()=>{
     if (msg) msg.textContent = '\u542c\u529b\u56fe\u5df2\u89e3\u9501\uff0c\u4f46\u624b\u673a\u53f7\u540c\u6b65\u5230\u540e\u53f0\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002';
